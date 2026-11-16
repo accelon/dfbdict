@@ -5,9 +5,13 @@ pdf/
 data/dfb.tsv
 
 # 成品與歷版備份的 .adb：走官網「研究用數據庫」發佈，不把二進位檔進版控
-out/*.adb
+# （寫 `*.adb` 而不只 `out/*.adb`——out/pilot/ 底下也曾產出測試庫）
+*.adb
 
 # backlink 中間檔與規則對照實驗產物（合共百餘 MB，可随时重跑）
 out/matches/
 out/gate-ab/
 out/_*.txt
+
+# 推遲重試的運轉日誌：只記「哪一次嘗試成功的」，不是校勘證據
+out/push-retry.log
