@@ -1,0 +1,13 @@
+# 原書三冊掃描圖（447 MB）——使用者明示不入版控，只留在本機
+pdf/
+
+# 與 ../fodict/data/佛學大辭典.tsv 逐位元組相同，不在兩個倉各存一份
+data/dfb.tsv
+
+# 成品與歷版備份的 .adb：走官網「研究用數據庫」發佈，不把二進位檔進版控
+out/*.adb
+
+# backlink 中間檔與規則對照實驗產物（合共百餘 MB，可随时重跑）
+out/matches/
+out/gate-ab/
+out/_*.txt

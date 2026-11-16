@@ -1,0 +1,26 @@
+cbdia_mark	base_letter	combining	composed	votes	grade	examples
+%	a	U+304	ā	1698		
+!	s	U+323	ṣ	341		
+!	n	U+323	ṇ	329		
+/	s	U+301	ś	266		
+%	u	U+304	ū	164		
+/	S	U+301	Ś	155		
+!	t	U+323	ṭ	140		
+%	m	U+307	ṁ	136		
+!	d	U+323	ḍ	117		
+^	i	U+304	ī	108		
+^	n	U+303	ñ	108		
+!	r	U+323	ṛ	101		
+^	A	U+304	Ā	95		
+%	n	U+307	ṅ	52		
+!	h	U+323	ḥ	26		
+%	s	U+301	ś	14		
+^	I	U+304	Ī	12		
+!	m	U+323	ṃ	6		
+!	R	U+323	Ṛ	3		
+!	S	U+323	Ṣ	2		
+!	D	U+323	Ḍ	1		
+!	T	U+323	Ṭ	1	1票·镜像同位实证·候选并入	
+%	o	U+304	ō	1	1票·镜像同位实证·候选并入	
+^	U	U+304	Ū	1	1票·镜像同位实证·候选并入	
+/	E	U+301	É	0	裁定补入·真字符回验通过（歐文佛書之一 见 Émile）	镜像以真字符 É(U+00C9) 对应 BAUS 的 E/；原始 HTML 作 &#x00C9;</span>mile

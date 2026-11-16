@@ -1,0 +1,3242 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>accelon26</title>
+<!-- 主題（作者 2026-10-18）：先套再畫，避免載入時閃一下暗底。預設暗色（不設 data-theme）。 -->
+<script>try{var t=localStorage.getItem('accelon26.theme');if(t==='light'||t==='eye'||t==='autumn')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+<!-- 圖示：建置時內嵌 appicon.png 的 data URI（單檔 HTML 不能依賴旁邊的檔案） -->
+<!--__APPICON__-->
+<style>
+  :root {
+    --bg: #1e1e1e; --panel: #252526; --panel2: #2d2d30; --line: #3c3c3c;
+    --fg: #d8d8d8; --dim: #909090; --accent: #5aa9ff; --warn: #e0a54a; --err: #e06c75; --pageMark: #e0a545;
+    /* 強調用的字色（作者 2026-11-05）：目錄樹的 ancestor／current 比起一般列再亮一點。
+       暗色用近白，淺色主題用近黑——都是往「對比更強」的方向走，不是真的變白。 */
+    --fg-strong: #ffffff;
+    /* 一般列的字色（作者 2026-11-06）：比 --fg 稍稍灰一點，ancestor／current 再用
+       --fg-strong 拉亮；ancestor 不再畫底線。 */
+    --fg-muted: #bfbfbf;
+  /* 主題色（作者 2026-10-18）：下列變數原本寫死在規則裡，改成變數才能換主題。
+     暗色系是預設（:root），亮色系／春綠見下面的 html[data-theme]。 */
+  --gold: #ffd479; --gold-2: #fff3c4;
+  --hl-bg: #2b3b4d; --row-hover: #262626;
+  --ink-on-accent: #08243f; --link: #7cc0ff;
+  /* 圖上的注號（厚觀法師 2026-11-13：「我瀏覽器用黑底，藍色的腳注看不見」）：
+     暗色系整張圖版會過 `invert(1) hue-rotate(180deg)`，這裡給的是**反轉前**的顏色。
+     #402000 反轉後在螢幕上是淡琥珀 #f6d6b6（黑底對比 15，原本的藍是 2.7）。
+     淺色主題不反轉，直接跟著 --gold 走。 */
+  --note-mark: #402000;
+  --mark-fg: #fff3d6; --hint-blue: #9fb6cd;
+  --popup-bg: #31353f; --popup-fg: #f2f2f2;
+  --border-soft: #2a2a2a; --code-bg: #1b1b1b;
+  --hit-1: #ff8a80; --hit-2: #ff6b6b; --hit-3: #ff3b30; --hit-4: #ff1744;
+  --ok: #9fe08a;
+  /* 字級按鈕那顆「小 T／大 T」的底色與字色（作者 2026-10 回報：亮色系／春綠下
+     還是黑方塊，很突兀）。暗色系維持原本的黑底白字。 */
+  --chip-bg: #000; --chip-fg: #fff;
+  /* 編輯器的 caret：和 accent（藍）相反的琥珀色，3px 粗（作者 2026-10-24） */
+  --caret: #ffb000;
+  /* 引文（CBETA <quote> → <引>）用楷體，和作者敘述分開（作者 2026-10-30）。
+     字體依序找：Windows 標楷體／KaiTi、macOS Kaiti、Linux AR PL UKai；
+     都沒有就退回襯線字體，至少不會變無襯線。 */
+  /* 楷體堆疊最前面放 Times New Roman（厚觀法師 2026-11-14 16:32：梵文、英文、數字
+     一律用 Times New Roman）。引文裡的漢字仍回退到楷體，只有拉丁與數字換成 TNR。 */
+  --kai: "Times New Roman", "Kaiti TC", "Kaiti SC", "KaiTi", "BiauKai", "標楷體", "DFKai-SB", "AR PL UKai CN", "Noto Serif CJK TC", serif;
+  /* 明體（新細明體）：科判用（厚觀法師 2026-11-12「科判應該用新細明體」）。
+     紙本的科判是 11pt 新細明體加框，本文才是楷體；電子版先前科判跟著本文用黑體，
+     法師一眼看出不同。Windows 新細明體＝PMingLiU（MingLiU 是細明體，先找 PMingLiU）。 */
+  --ming: "PMingLiU", "新細明體", "MingLiU", "Songti TC", "STSong", "Noto Serif CJK TC", "Source Han Serif TC", "SimSun", serif;
+  /* diff 用的紅綠（比 --hit-2／--ok 更亮，作者 2026-10-25） */
+  --diff-add: #7dff9e; --diff-del: #ff5252;
+  /* 歷史版本 docTab：棕黃 */
+  --history-bg: #6b4f1d; --history-fg: #ffe6a3;
+  /* CodeMirror 選取：深藍底＋淺字，避免和標籤紅／一般字混在一起 */
+  --cm-sel-bg: #1d4e89; --cm-sel-fg: #ffffff;
+  color-scheme: dark;
+    --fs: 15px;               /* base font size */
+    --left: 25fr;             /* column widths, draggable; 0fr = hidden */
+    --center: 50fr;
+    --right: 25fr;
+    --minSide: 15;            /* percent: below this a side snaps shut */
+    /* 目錄樹節點／內文標題的顏色：**主題變數**（作者 2026-10：不要寫死，
+       以後換 theme 只要換這幾個值）。depthColor() 回傳 var(--tag-text-N)。
+       --tag-N 是較深的底色（標籤色塊、殘留用途）；--tag-text-N 是標題字色，
+       目錄樹的 tDot 也用這一個（作者 2026-11-05：色點與內文標題同色）。 */
+    --tag-0: hsl(0 30% 32%);
+    --tag-1: hsl(55 55% 32%);
+    --tag-2: hsl(110 55% 32%);
+    --tag-3: hsl(165 55% 32%);
+    --tag-4: hsl(220 55% 32%);
+    --tag-5: hsl(275 55% 32%);
+    --tag-6: hsl(330 55% 32%);
+    --tag-7: hsl(25 55% 32%);
+    --tag-text-0: hsl(0 55% 66%);
+    --tag-text-1: hsl(55 75% 68%);
+    --tag-text-2: hsl(110 50% 66%);
+    --tag-text-3: hsl(165 50% 64%);
+    --tag-text-4: hsl(220 75% 72%);
+    --tag-text-5: hsl(275 60% 76%);
+    --tag-text-6: hsl(330 60% 74%);
+    --tag-text-7: hsl(25 80% 68%);
+  }
+
+  /* ---- 主題（作者 2026-10-18）---------------------------------------------
+     預設＝暗色系（:root）；設定頁可切亮色系／春綠，存在 localStorage('accelon26.theme')。
+     只換變數，不動版面：換主題不用重繪。 */
+  html[data-theme="light"] {
+    --bg: #ffffff; --panel: #f5f6f8; --panel2: #eceef1; --line: #d6d9de;
+    --fg: #1f2328; --dim: #6a7280; --accent: #1f6feb; --warn: #b45309; --err: #c0392b; --pageMark: #a15d00;
+    --fg-strong: #000000;
+    --fg-muted: #3c444d;
+    --gold: #8a5a00; --gold-2: #7a4a00; --note-mark: var(--gold);
+    --hl-bg: #dbe9ff; --row-hover: #eef1f5;
+    --ink-on-accent: #ffffff; --link: #1f6feb;
+    --mark-fg: #fff3d6; --hint-blue: #5b6b80;
+    --popup-bg: #ffffff; --popup-fg: #1f2328;
+    --border-soft: #e5e7eb; --code-bg: #f2f3f5;
+    --hit-1: #d9534f; --hit-2: #cc3b36; --hit-3: #b52a20; --hit-4: #9c1a12;
+    --ok: #2e7d32;
+    --chip-bg: #f5f6f8; --chip-fg: #1f2328;
+    --caret: #c2410c;
+    --diff-add: #0a8f3c; --diff-del: #d92d20;
+    --history-bg: #e8d29a; --history-fg: #5a430f;
+    --cm-sel-bg: #b6d4fe; --cm-sel-fg: #0b2545;
+    color-scheme: light;
+    --tag-0: hsl(0 55% 42%); --tag-1: hsl(48 70% 34%); --tag-2: hsl(110 50% 34%);
+    --tag-3: hsl(165 55% 30%); --tag-4: hsl(220 60% 46%); --tag-5: hsl(275 50% 44%);
+    --tag-6: hsl(330 55% 44%); --tag-7: hsl(25 70% 40%);
+    --tag-text-0: hsl(0 60% 40%); --tag-text-1: hsl(48 75% 30%); --tag-text-2: hsl(110 50% 30%);
+    --tag-text-3: hsl(165 60% 26%); --tag-text-4: hsl(220 65% 40%); --tag-text-5: hsl(275 55% 38%);
+    --tag-text-6: hsl(330 60% 38%); --tag-text-7: hsl(25 75% 34%);
+  }
+  html[data-theme="eye"] {
+    --bg: #eaf1e2; --panel: #e2ecd8; --panel2: #d8e5cc; --line: #c3d3b6;
+    --fg: #2c3a2a; --dim: #5d6c55; --accent: #3f7d4e; --warn: #8a6d1f; --err: #b0413e; --pageMark: #6f5a12;
+    --fg-strong: #131d12;
+    --fg-muted: #45523f;
+    --gold: #6d5a12; --gold-2: #5c4a0c; --note-mark: var(--gold);
+    --hl-bg: #cfe3c2; --row-hover: #dfe9d5;
+    --ink-on-accent: #ffffff; --link: #2f6b3e;
+    --mark-fg: #fff8e6; --hint-blue: #64745c;
+    --popup-bg: #f4f8ef; --popup-fg: #2c3a2a;
+    --border-soft: #d5e0c9; --code-bg: #eef4e8;
+    --hit-1: #a8433f; --hit-2: #96322e; --hit-3: #7f2622; --hit-4: #6b1c18;
+    --ok: #3f7d4e;
+    --chip-bg: #e6efdc; --chip-fg: #2c3a2a;
+    --caret: #a02060;
+    --diff-add: #087a2f; --diff-del: #c0262c;
+    --history-bg: #dfc98e; --history-fg: #513c0d;
+    --cm-sel-bg: #b7d6a5; --cm-sel-fg: #1f331b;
+    color-scheme: light;
+    --tag-0: hsl(0 45% 38%); --tag-1: hsl(48 60% 30%); --tag-2: hsl(110 40% 30%);
+    --tag-3: hsl(165 45% 27%); --tag-4: hsl(220 45% 40%); --tag-5: hsl(275 40% 38%);
+    --tag-6: hsl(330 45% 38%); --tag-7: hsl(25 55% 34%);
+    --tag-text-0: hsl(0 50% 34%); --tag-text-1: hsl(48 65% 26%); --tag-text-2: hsl(110 40% 26%);
+    --tag-text-3: hsl(165 50% 23%); --tag-text-4: hsl(220 50% 34%); --tag-text-5: hsl(275 45% 32%);
+    --tag-text-6: hsl(330 50% 32%); --tag-text-7: hsl(25 60% 28%);
+  }
+  /* 秋黃（作者 2026-10-22）：黃棕紙色；和春綠一樣是淺色主題 */
+  html[data-theme="autumn"] {
+    --bg: #f6ecd6; --panel: #efe2c6; --panel2: #e7d7b4; --line: #cdb98e;
+    --fg: #3a2d1b; --dim: #7d6a47; --accent: #a8691f; --warn: #8a5a12; --err: #a53f2a; --pageMark: #8a5a12;
+    --fg-strong: #211708;
+    --fg-muted: #57482f;
+    --gold: #7a4f0e; --gold-2: #6a4208; --note-mark: var(--gold);
+    --hl-bg: #ecd5a6; --row-hover: #eee0c4;
+    --ink-on-accent: #ffffff; --link: #8a5a12;
+    --mark-fg: #fff7e4; --hint-blue: #7d6a47;
+    --popup-bg: #fbf4e2; --popup-fg: #3a2d1b;
+    --border-soft: #e0d2b2; --code-bg: #f8f0dc;
+    --hit-1: #a8431f; --hit-2: #96351a; --hit-3: #7f2812; --hit-4: #6b1c0a;
+    --ok: #5f7a2b;
+    --chip-bg: #f1e3c6; --chip-fg: #3a2d1b;
+    --caret: #006b7a;
+    --diff-add: #2e7d32; --diff-del: #c0392b;
+    --history-bg: #e2c98c; --history-fg: #513c0d;
+    --cm-sel-bg: #e8cf9a; --cm-sel-fg: #3a2d1b;
+    color-scheme: light;
+    --tag-0: hsl(20 60% 38%); --tag-1: hsl(45 70% 32%); --tag-2: hsl(75 45% 32%);
+    --tag-3: hsl(150 35% 30%); --tag-4: hsl(205 45% 38%); --tag-5: hsl(280 35% 40%);
+    --tag-6: hsl(330 45% 38%); --tag-7: hsl(0 50% 38%);
+    --tag-text-0: hsl(20 65% 32%); --tag-text-1: hsl(45 75% 27%); --tag-text-2: hsl(75 50% 27%);
+    --tag-text-3: hsl(150 40% 25%); --tag-text-4: hsl(205 50% 32%); --tag-text-5: hsl(280 40% 33%);
+    --tag-text-6: hsl(330 50% 32%); --tag-text-7: hsl(0 55% 32%);
+  }
+  /* 梵字字型（作者 2026-10-31）：建置時把 CBETA Siddam／Ranjana 的 WOFF2
+     以 data URI 插進來（ts/tools/page-build.ts）。只涵蓋 U+100000–10FFFD
+     （第 16 平面私用區），不會影響一般漢字。 */
+  /*__FONTS__*/
+  * { box-sizing: border-box; }
+  /* The page itself never scrolls: header + main fill the viewport exactly, and
+     only the panes that need it (document text, search results, token list)
+     scroll. `overflow: hidden` on both html and body kills the page scrollbar. */
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: var(--fs)/1.6 "Accelon Box", "Accelon Siddham Uni", "Accelon Siddham Extra", "Accelon Ranjana", "Segoe UI", "Microsoft JhengHei", system-ui, sans-serif;
+    display: grid; grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr);
+  }
+  body.dragging::after {
+    content: "放開以開啟 .adb"; position: fixed; inset: 0; z-index: 50;
+    display: grid; place-items: center; font-size: 26px;
+    background: rgba(90,169,255,.12); border: 3px dashed var(--accent);
+  }
+  header {
+    /* 不要內距（作者 2026-10-31）：頂欄貼齊邊緣，省高度、閱讀區更大 */
+    display: flex; align-items: center; gap: 10px; padding: 0;
+    background: var(--panel); border-bottom: 1px solid var(--line);
+  }
+  header h1 {
+    font-size: 20px; margin: 0; font-weight: 700; letter-spacing: .01em;
+    /* 作者 2026-10：標題改亮灰（原本的藍色只在「有新版本」時閃動） */
+    color: var(--fg); text-shadow: none;
+  }
+  header h1 .accent { color: var(--gold); text-shadow: 0 0 14px rgba(255,212,121,.35); }
+  /* 左上角有新版可更新時：閃動 ＋ 可點擊（桌面版才會出現；網頁版沒有宿主，永遠不會） */
+  #brand.update { cursor: pointer; animation: brandFlash 1.1s ease-in-out infinite; }
+  #brand.update:hover { filter: brightness(1.35); }
+  @keyframes brandFlash {
+    0%, 100% { color: var(--fg); text-shadow: none; }
+    50% { color: var(--gold); text-shadow: 0 0 22px rgba(255,212,121,.85); }
+  }
+  /* 全螢幕提示（第一次啟動是全螢幕、沒有標題列，要告訴使用者怎麼回視窗） */
+  .fsHint {
+    position: fixed; z-index: 70; left: 50%; top: 10px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 12px; padding: 8px 14px;
+    background: var(--panel2); color: var(--fg); border: 1px solid var(--accent);
+    border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.5); font-size: 14px;
+    transition: opacity .4s ease;
+  }
+  .fsHint.gone { opacity: 0; pointer-events: none; }
+  .fsHint button {
+    background: transparent; color: var(--accent); border: 1px solid var(--line);
+    border-radius: 6px; font: inherit; font-size: 13px; padding: 2px 10px; cursor: pointer;
+  }
+  /* 改版說明（更新後顯示一次） */
+  #notesBox {
+    position: fixed; z-index: 60; left: 50%; top: 12%; transform: translateX(-50%);
+    max-width: min(720px, 88vw); max-height: 70vh; overflow: auto; padding: 18px 22px;
+    background: var(--panel); color: var(--fg); border: 1px solid var(--accent);
+    border-radius: 10px; box-shadow: 0 12px 48px rgba(0,0,0,.6);
+  }
+  #notesBox h2 { margin: 0 0 6px; font-size: 17px; color: var(--link); }
+  #notesBox .ver { font-size: 13px; color: var(--dim); margin-bottom: 10px; }
+  #notesBox ul { margin: 0 0 12px; padding-left: 20px; }
+  #notesBox li { margin: 4px 0; }
+  #notesBox button {
+    background: var(--accent); color: var(--ink-on-accent); border: 0; border-radius: 6px;
+    font: inherit; padding: 6px 18px; cursor: pointer;
+  }
+  /* ---- 設置（齒輪） ---- */
+  #settingsBackdrop { position: fixed; inset: 0; z-index: 82; background: rgba(0,0,0,.55); }
+  #settingsBackdrop[hidden], #settingsBox[hidden] { display: none; }
+  #settingsBox {
+    position: fixed; z-index: 83; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(940px, 95vw); max-height: 88vh; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 12px; box-shadow: 0 18px 60px rgba(0,0,0,.65); padding: 14px 18px 0;
+  }
+  .setTabs { display: flex; gap: 2px; margin: 4px -18px 0; padding: 0 18px; border-bottom: 1px solid var(--line); flex: 0 0 auto; }
+  .setTab {
+    background: transparent; border: 0; border-bottom: 2px solid transparent; color: var(--dim);
+    font: inherit; font-size: 13px; padding: 7px 12px; cursor: pointer;
+  }
+  .setTab:hover { color: var(--fg); }
+  .setTab.active { color: var(--fg); border-bottom-color: var(--accent); font-weight: 600; }
+  .setBody { overflow: auto; min-height: 0; flex: 1 1 auto; padding: 10px 0 6px; }
+  .setPane[hidden] { display: none; }
+  /* 設置 → 悉曇（作者 2026-10-31）：字型測試頁 */
+  .sanskritSample { margin: 10px 0 20px; }
+  .sanskritSampleHead { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+  .sanskritSampleHead b { font-size: 15px; }
+  .sanskritSampleHead code {
+    font-size: 12px; color: var(--dim); background: var(--code-bg);
+    border: 1px solid var(--border-soft); border-radius: 4px; padding: 1px 6px;
+  }
+  .sanskritSampleHead a { font-size: 12px; color: var(--link); }
+  .sanskritJump {
+    font-size: 12px; padding: 1px 8px; border: 1px solid var(--line); border-radius: 5px;
+    background: transparent; color: var(--link); cursor: pointer;
+  }
+  .sanskritJump:hover { border-color: var(--link); }
+  .sanskritLines {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; overflow-x: auto; line-height: 1.85; font-size: 26px; color: var(--fg);
+  }
+  .sanskritLines.ranjana { font-size: 22px; line-height: 1.6; }
+  .sanskritLines.noto { font-size: 30px; line-height: 1.7; }
+  .sanskritLines.noto .sdSeq { font-family: "Accelon Siddham Uni", "Accelon Siddham Extra", serif; }
+  /* CBETA 獨有的 81 字（2026-11-01） */
+  .extraGrid { display: flex; flex-wrap: wrap; gap: 6px 10px; margin: 6px 0 10px; }
+  .extraCell { display: flex; flex-direction: column; align-items: center; min-width: 62px; }
+  .extraCell .sanskritGlyph { font-size: 30px; line-height: 1.2; }
+  .extraCell code { font-size: 10px; color: var(--dim); }
+  .sanskritLine { white-space: pre-wrap; overflow-wrap: anywhere; }
+  /* 字形右邊的 IAST（作者 2026-10-31）：預設藏起來，勾選後才 inline。
+     打開 IAST 後一行會變寬，所以允許在「字＋轉寫」之間換行（不拆開單一組）。 */
+  /* SAT 的悉曇連字（&SDxxxxx;）：顯示時換成 Unicode 序列，用 Noto 子集排版。
+     序列本身是 2–7 個字母，交給字型的 GSUB 組成連字。 */
+  .sdSeq { font-family: "Accelon Siddham Uni", "Accelon Siddham Extra", serif; }
+  .sanskritGlyph { white-space: nowrap; }
+  .sanskritIast {
+    display: none; font-family: "Segoe UI", "Microsoft JhengHei", system-ui, sans-serif;
+    font-size: .58em; color: var(--dim); margin-left: .35em; margin-right: .1em; vertical-align: baseline; letter-spacing: 0;
+  }
+  #sanskritSamples.showIast .sanskritIast { display: inline; }
+  #sanskritSamples.showIast .sanskritLine { white-space: pre-wrap; }
+  #sanskritSamples.showIast .sanskritGlyph { display: inline-block; }
+  .sanskritMapBox { margin-top: 6px; }
+  .sanskritMapBox summary { cursor: pointer; color: var(--link); font-size: 12px; }
+  .sanskritMapScroll { max-height: 260px; overflow: auto; margin-top: 6px; border: 1px solid var(--line); border-radius: 6px; }
+  .sanskritMapTable { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .sanskritMapTable th, .sanskritMapTable td {
+    text-align: left; padding: 3px 8px; border-bottom: 1px solid var(--border-soft); white-space: nowrap;
+  }
+  .sanskritMapTable th { position: sticky; top: 0; background: var(--panel2); }
+  .sanskritMapTable .sdCode, .sanskritMapTable .sdPua { font-family: ui-monospace, Consolas, monospace; }
+  .setHead { display: flex; align-items: center; margin-bottom: 8px; }
+  .setHead h2 { margin: 0; font-size: 20px; color: var(--link); flex: 1 1 auto; }
+  /* 右欄「詞典」分頁（作者 2026-10）：上半詞條清單 / 下半詞條正文
+     **不要在這裡寫 display**：這條的優先度 (0,2,0) 會蓋掉 `.tabPane { display:none }`，
+     於是詞典分頁在別的分頁 active 時也畫在下面（作者 2026-10-18 從截圖抓到）。
+     直的排列交給 `.tabs-host .tabPane.active`（0,3,0）。 */
+  .tabPane[data-tab="dict"] { flex-direction: column; min-height: 0; }
+  .dictList { flex: 0 0 auto; max-height: 38%; overflow: auto; border-bottom: 1px solid var(--line); padding: 6px 8px; }
+  .dictSent { color: var(--dim); font-size: 12px; margin-bottom: 4px; }
+  /* 詞條清單是「清單」：跟著右欄字級縮放（作者 2026-10-18），所以用 em 不用 px */
+  .dictItem {
+    display: flex; align-items: baseline; gap: 8px; width: 100%; text-align: left;
+    background: transparent; color: var(--fg); border: 1px solid transparent; border-radius: 5px;
+    font: inherit; font-size: 1.077em; padding: 3px 6px; cursor: pointer;
+  }
+  .dictItem:hover { background: var(--panel2); }
+  .dictItem.active { background: var(--hl-bg); border-color: var(--accent); }
+  .dictItem .lbl { flex: 1 1 auto; font-weight: 600; }
+  .dictItem .db { color: var(--dim); font-size: .857em; }
+  .dictItem .len { color: var(--gold); font-size: .857em; font-variant-numeric: tabular-nums; }
+  .dictBody { flex: 1 1 auto; min-height: 0; }
+  .dictHead { font-weight: 700; font-size: 1.23em; margin: 2px 0 6px; }
+  .dictHead .db { color: var(--dim); font-weight: 400; font-size: .75em; margin-left: 6px; }
+  /* 詞條正文下面：「開頭」／「結尾」兩份親戚清單（作者 2026-10） */
+  .dictText { border-bottom: 1px dashed var(--line); padding-bottom: 8px; }
+  /* lex-pane（2026-11-02）：詞形／詞譜 drawer；與 dict-pane 完全分開。 */
+  .lexPane {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 60;
+    width: min(380px, 92vw); display: flex; flex-direction: column;
+    background: var(--panel); border-left: 1px solid var(--line);
+    box-shadow: -12px 0 32px rgba(0,0,0,.35);
+  }
+  .lexPane[hidden] { display: none !important; }
+  .lexPaneHead {
+    display: flex; align-items: baseline; gap: 8px; padding: 10px 12px;
+    border-bottom: 1px solid var(--line); font-size: 15px;
+  }
+  .lexPaneSub { color: var(--dim); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lexPaneClose {
+    margin-left: auto; background: transparent; color: var(--dim); border: 1px solid var(--line);
+    border-radius: 5px; font: inherit; font-size: 16px; line-height: 1; padding: 2px 8px; cursor: pointer;
+  }
+  .lexPaneClose:hover { color: var(--fg); border-color: var(--accent); }
+  .lexPaneBody { padding: 12px; overflow: auto; font-size: 14px; line-height: 1.7; }
+  .lexWord { font-size: 1.5em; font-weight: 700; margin-bottom: 2px; }
+  .lexWhere { color: var(--dim); font-size: 11px; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+  .lexCopy { font: inherit; font-size: 10px; padding: 0 4px; margin-left: 4px; color: var(--dim); background: transparent; border: 1px solid currentColor; border-radius: 3px; cursor: pointer; }
+  .lexCodes, .lexNote { color: var(--dim); font-size: 12px; margin-bottom: 8px; }
+  .lexCaseBars { display: grid; gap: 2px; margin: -3px 0 7px; }
+  .lexCaseRow { display: grid; grid-template-columns: 2.5em 1fr 2.2em; align-items: center; gap: 4px; font-size: 10px; color: var(--dim); }
+  .lexCaseRow i { display: block; height: 5px; background: var(--accent, #6a8); border-radius: 3px; }
+  .lexCaseRow b { text-align: right; font-weight: 400; font-variant-numeric: tabular-nums; }
+  .lexTree { margin: 2px 0 8px; font-size: 11px; color: var(--dim); }
+  .lexTreeHead { color: var(--fg); }
+  .lexTreePart { padding-left: 1em; font-family: var(--mono, monospace); }
+  .lexPart { font: inherit; color: var(--accent, #6a8); background: transparent; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+  .lexExamples { display: grid; gap: 3px; margin: 2px 0 8px; font-size: 11px; color: var(--dim); }
+  .lexExamples > div:not(.lexLabel) { line-height: 1.35; }
+  .lexExamples .lexExample { display: block; width: 100%; text-align: left; font: inherit; font-size: 11px; line-height: 1.35; color: var(--dim); background: transparent; border: 0; padding: 1px 0; cursor: pointer; }
+  .lexExamples .lexExample:hover { color: var(--fg); }
+  .lexExamples .lexLabel { color: var(--fg); font-size: 10px; }
+  .lexRow { display: grid; grid-template-columns: 3.5em 1fr; gap: 6px; padding: 2px 0; border-bottom: 1px solid var(--border-soft); }
+  .lexLabel { color: var(--dim); }
+  .lexSenses { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--line); }
+  /* 漢詞反查候選（2026-11-03）：選取漢字 →「查詞」→ 巴利詞清單 */
+  .lexCands { display: grid; gap: 2px; margin: 6px 0; }
+  .lexCand {
+    display: grid; grid-template-columns: 1fr auto; gap: 0 8px; align-items: baseline;
+    width: 100%; text-align: left; font: inherit; background: transparent; color: var(--fg);
+    border: 1px solid transparent; border-radius: 5px; padding: 4px 6px; cursor: pointer;
+  }
+  .lexCand:hover { background: var(--hl-bg); border-color: var(--line); }
+  .lexCand b { font-weight: 600; }
+  .lexCand .lexCandGloss { grid-column: 1; color: var(--dim); font-size: 11px; }
+  .lexCand i { grid-row: 1 / span 2; grid-column: 2; color: var(--dim); font-size: 10px; font-variant-numeric: tabular-nums; }
+  .lexSenses div { margin: 2px 0; }
+  /* 詞條正文沒有原書換行：長行要自動折行（作者 2026-11-02，所有詞典）。
+     `pre-wrap` 保留必要的換行與空白，同時允許軟折；長拉丁字串也強制斷開，
+     不讓右欄長出水平捲軸。 */
+  #dictBody .docLine { display: block; }
+  #dictBody .docLine .lineText { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .dictMore { margin-top: 8px; }
+  .dictMoreTabs { display: flex; gap: 6px; margin-bottom: 4px; }
+  .dictMoreTab {
+    background: transparent; color: var(--dim); border: 1px solid var(--line); border-radius: 5px;
+    font: inherit; font-size: 12px; padding: 2px 10px; cursor: pointer;
+  }
+  .dictMoreTab:hover { border-color: var(--accent); color: var(--fg); }
+  .dictMoreTab.active { background: var(--accent); color: var(--ink-on-accent); font-weight: 700; border-color: var(--accent); }
+  .dictMoreList { display: flex; flex-wrap: wrap; gap: 4px; }
+  .dictRel {
+    display: inline-flex; align-items: baseline; gap: 6px; background: transparent; color: var(--fg);
+    border: 1px solid var(--line); border-radius: 5px; font: inherit; font-size: 13px;
+    padding: 2px 8px; cursor: pointer;
+  }
+  .dictRel:hover { border-color: var(--accent); background: var(--panel2); }
+  .dictRel .db { color: var(--dim); font-size: 11px; }
+  /* ---- 搜尋所有 adb（作者 2026-10） ---- */
+  #allSearchBackdrop { position: fixed; inset: 0; z-index: 84; background: rgba(0,0,0,.55); }
+  #allSearchBackdrop[hidden], #allSearchBox[hidden] { display: none; }
+  #allSearchBox {
+    position: fixed; z-index: 85; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(680px, 94vw); max-height: 86vh; overflow: auto;
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 12px; box-shadow: 0 18px 60px rgba(0,0,0,.65); padding: 16px 20px 14px;
+  }
+  .allSearchBar { display: flex; gap: 8px; margin: 4px 0 8px; }
+  .allSearchBar input {
+    flex: 1 1 auto; background: var(--panel2); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 6px; font: inherit; font-size: 14px; padding: 6px 10px;
+  }
+  .allSearchBar button {
+    background: var(--accent); color: var(--ink-on-accent); border: 0; border-radius: 6px;
+    font: inherit; font-weight: 700; padding: 6px 16px; cursor: pointer;
+  }
+  .allSearchBar button:disabled { opacity: .5; cursor: default; }
+  /* 三種模式（作者 2026-11-01）：索引／單庫萬用／全庫萬用 */
+  .allSearchModes { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; margin: 2px 0 6px; }
+  .allSearchModes button {
+    background: transparent; color: var(--dim); border: 0; border-right: 1px solid var(--line);
+    font: inherit; font-size: 13px; padding: 4px 12px; cursor: pointer;
+  }
+  .allSearchModes button:last-child { border-right: 0; }
+  .allSearchModes button:hover { background: var(--panel2); color: var(--fg); }
+  .allSearchModes button.on { background: var(--hl-bg); color: var(--fg); font-weight: 700; }
+  /* 掃描進度（萬用字元）：一條 bar ＋「已掃／剩餘／找到」與中斷 */
+  #allSearchProg { margin: 6px 0 4px; }
+  .allSearchTrack { height: 8px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--line); overflow: hidden; }
+  #allSearchBarFill { height: 100%; width: 0; background: var(--accent); transition: width .12s linear; }
+  #allSearchProgText { margin-top: 4px; font-variant-numeric: tabular-nums; }
+  #allSearchStop { background: var(--hit-2); color: #fff; }
+  /* 命中的「字串」清單（研究用：某字前後可能出現哪些字，次數多的在前） */
+  .allSearchForms { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+  .allSearchForm {
+    display: inline-flex; align-items: baseline; gap: 6px; background: transparent; color: var(--fg);
+    border: 1px solid var(--line); border-radius: 999px; font: inherit; font-size: 14px;
+    padding: 2px 10px; cursor: pointer;
+  }
+  .allSearchForm:hover { border-color: var(--accent); background: var(--panel2); }
+  .allSearchForm b { font-weight: 700; color: var(--gold); }
+  .allSearchForm .db { color: var(--dim); font-size: 11px; }
+  .allSearchList { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+  .allSearchRow {
+    display: flex; align-items: baseline; gap: 10px; width: 100%; text-align: left;
+    background: transparent; color: var(--fg); border: 1px solid var(--line); border-radius: 6px;
+    font: inherit; font-size: 14px; padding: 6px 10px; cursor: pointer;
+  }
+  .allSearchRow:hover { border-color: var(--accent); background: var(--panel2); }
+  .allSearchRow .n { flex: 1 1 auto; }
+  .allSearchRow .c { color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .allSearchRow .c.zero { color: var(--dim); font-weight: 400; }
+  .allSearchRow .t { color: var(--dim); font-size: 12px; }
+  .allSearchRow.done { border-color: transparent; background: transparent; }
+  .setSection { border-top: 1px solid var(--line); padding: 10px 0 4px; }
+  .setSection h3 { margin: 0 0 6px; font-size: 13px; color: var(--dim); font-weight: 600; letter-spacing: .04em; }
+  .setRow { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 14px; flex-wrap: wrap; }
+  .setRow > span:first-of-type { min-width: 5em; }
+  .setHint { color: var(--dim); font-size: 12px; flex: 1 1 100%; margin-left: 24px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .seg button {
+    background: transparent; color: var(--fg); border: 0; border-right: 1px solid var(--line);
+    font: inherit; font-size: 13px; padding: 3px 12px; cursor: pointer;
+  }
+  .seg button:last-child { border-right: 0; }
+  .seg button:hover { background: var(--panel2); }
+  .seg button.active { background: var(--accent); color: var(--ink-on-accent); font-weight: 600; }
+  /* 文字顯示的範例（三列並排比較，隨設定突顯目前那一列） */
+  .simDemo {
+    margin: 6px 0 4px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--panel2); font-size: 13px;
+  }
+  .simDemo .simRow { display: flex; gap: 8px; align-items: baseline; padding: 2px 4px; border-radius: 4px; }
+  .simDemo .simRow.active { background: var(--hl-bg); box-shadow: inset 2px 0 0 var(--accent); }
+  .simDemo .simLabel { flex: 0 0 5.5em; color: var(--dim); font-size: 12px; }
+  .simDemo .simRow.active .simLabel { color: var(--fg); }
+  .simDemo .simText { letter-spacing: .02em; }
+  .simDemo .simText em { font-style: normal; color: var(--gold); text-decoration: underline dotted; }
+  .setFoot { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--line); padding-top: 10px; }  .setFoot .setHint { margin: 0; flex: 1 1 auto; }
+  /* ---- 標籤樣式（作者 2026-10-22） ---- */
+  .tagScopeBar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 2px 0 8px; }
+  .tagScopeBar .grow { flex: 1 1 auto; }
+  .tagScopeNow { font-size: 12px; color: var(--dim); }
+  .tagScopeNow b { color: var(--fg); font-weight: 600; }
+  .tagBanner {
+    display: flex; gap: 8px; align-items: flex-start; border: 1px solid var(--line);
+    border-left: 3px solid var(--accent); border-radius: 6px; background: var(--panel2);
+    padding: 7px 10px; font-size: 12.5px; color: var(--dim); margin: 0 0 10px;
+  }
+  .tagBanner b { color: var(--fg); font-weight: 600; }
+  .tagSectionHead { display: flex; align-items: baseline; gap: 8px; margin: 10px 0 6px; flex-wrap: wrap; }
+  .tagSectionHead b { font-size: 13px; }
+  .tagSectionHead span { font-size: 11.5px; color: var(--dim); }
+  .tagScroll { overflow-x: auto; padding-bottom: 4px; }
+  .tagTable { display: flex; flex-direction: column; gap: 5px; min-width: 842px; }
+  .tagHead, .tagRow {
+    display: grid; align-items: center; gap: 8px;
+    grid-template-columns: 150px 100px 120px 146px minmax(176px, 1fr) 110px;
+    padding: 5px 8px;
+  }
+  .tagHead { color: var(--dim); font-size: 11px; letter-spacing: .04em; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+  .tagHead > span:last-child { text-align: right; }
+  .tagRow { border: 1px solid var(--line); border-radius: 7px; background: var(--panel2); }
+  .tagRow.own { border-color: var(--accent); box-shadow: inset 2px 0 0 var(--accent); }
+  .tagRow.groupRow { background: transparent; border-style: dashed; }
+  .tagRow.bodyRow { background: var(--panel); }
+  .tName { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .tMeta { color: var(--dim); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tchip {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 1.6em; white-space: nowrap;
+    border: 1px solid var(--line); border-radius: 5px; padding: 0 5px; font-weight: 600; line-height: 1.35;
+    background: var(--panel);
+  }
+  .modeSeg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+  .modeSeg button { background: transparent; border: 0; border-right: 1px solid var(--line); color: var(--dim); font: inherit; font-size: 11.5px; padding: 2px 7px; cursor: pointer; white-space: nowrap; }
+  .modeSeg button:last-child { border-right: 0; }
+  .modeSeg button:hover { color: var(--fg); }
+  .modeSeg button.on { background: var(--hl-bg); color: var(--fg); font-weight: 600; }
+  .tagRow .ctl { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .tagRow .ctl.disabled { opacity: .55; }
+  .tagRow .ctl input[type="color"] { width: 26px; height: 22px; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); }
+  .tagRow .ctl input[type="range"] { width: 84px; }
+  .tagRow .ctl .val { font-size: 12px; font-variant-numeric: tabular-nums; min-width: 3.4em; }
+  .tagRow .ctl select {
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 4px;
+    font: inherit; font-size: 11.5px; padding: 2px 4px; max-width: 88px;
+  }
+  .tagRow .src { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+  .srcTag { font-size: 10.5px; border-radius: 999px; padding: 1px 7px; border: 1px solid var(--line); color: var(--dim); white-space: nowrap; }
+  .srcTag.global { color: var(--link); border-color: var(--link); }
+  .srcTag.adb { color: var(--gold); border-color: var(--gold); }
+  .srcTag.group { color: var(--tag-text-5); border-color: var(--tag-text-5); }
+  .tagRow .mini { background: transparent; color: var(--dim); border: 1px solid var(--line); border-radius: 4px; font: inherit; font-size: 11px; padding: 1px 6px; cursor: pointer; }
+  .tagRow .mini:hover { color: var(--fg); border-color: var(--accent); }
+  .tagStore { border: 1px solid var(--line); border-radius: 8px; background: var(--panel2); padding: 9px 12px; margin-top: 12px; }
+  .tagStoreRow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 3px 0; font-size: 12.5px; }
+  .tagStoreRow b { min-width: 5.5em; color: var(--dim); font-weight: 500; }
+  .tagStoreRow code { font-size: 12px; background: var(--code-bg); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+  .vchip { font-size: 11px; background: var(--hl-bg); border: 1px solid var(--accent); color: var(--fg); border-radius: 999px; padding: 0 7px; }
+  .okchip { font-size: 11px; color: var(--ok); border: 1px solid var(--ok); border-radius: 999px; padding: 0 7px; }
+  .warnchip { font-size: 11px; color: var(--warn); border: 1px solid var(--warn); border-radius: 999px; padding: 0 7px; }
+  .setBtn { background: transparent; color: var(--fg); border: 1px solid var(--line); border-radius: 5px; font: inherit; font-size: 12px; padding: 3px 10px; cursor: pointer; }
+  .setBtn:hover { border-color: var(--accent); }
+  .setBtn:disabled { opacity: .5; cursor: default; }
+  /* 還沒有任何 .adb 關聯時，這顆要醒目（作者 2026-11-08） */
+  .setBtn.prominent {
+    background: var(--accent); color: var(--ink-on-accent); border-color: var(--accent);
+    font-size: 13px; font-weight: 700; padding: 5px 14px;
+  }
+  .setBtn.prominent:hover { filter: brightness(1.12); }
+  /* 設定頁的小輸入框（閱讀狀態的名稱，作者 2026-11-01） */
+  .setInput {
+    flex: 0 1 14em; min-width: 8em; background: var(--panel2); color: var(--fg);
+    border: 1px solid var(--line); border-radius: 5px; font: inherit; font-size: 12px; padding: 3px 8px;
+  }
+  .setInput:focus { outline: none; border-color: var(--accent); }
+  /* 查字典：詞典順序清單（作者 2026-10-22） */
+  .dictOrder { display: flex; flex-direction: column; gap: 5px; margin: 6px 0 2px; }
+  .dictOrderRow {
+    display: flex; align-items: center; gap: 8px; border: 1px solid var(--line);
+    border-radius: 7px; background: var(--panel2); padding: 5px 8px;
+  }
+  .dictOrderRow .idx { color: var(--dim); font-size: 11px; width: 1.5em; text-align: right; }
+  .dictOrderRow .dn { font-weight: 600; }
+  .dictOrderRow .df { color: var(--dim); font-size: 11.5px; }
+  .dictOrderRow .di {
+    color: var(--gold); font-size: 10.5px; border: 1px solid var(--line); border-radius: 4px;
+    padding: 0 4px; line-height: 1.5;
+  }
+  .dictOrderRow .de { color: var(--dim); font-size: 11px; margin-left: auto; }
+  .dictOrderRow .dictMoves { display: flex; gap: 2px; }
+  .dictOrderRow .dictMoves .setBtn { min-width: 26px; padding: 1px 4px; }
+  #settingsDone {
+    background: var(--accent); color: var(--ink-on-accent); border: 0; border-radius: 6px;
+    font: inherit; font-size: 13px; padding: 5px 16px; cursor: pointer;
+  }
+  /* ---- About（軟件說明；點左上角 accelon26 開啟） ---- */
+  /* 「加入 Obsidian」的檔名輸入（作者 2026-10-25）：與 About 同一套外觀 */
+  #vaultNameBackdrop { position: fixed; inset: 0; z-index: 84; background: rgba(0,0,0,.55); }
+  #vaultNameBackdrop[hidden], #vaultNameBox[hidden] { display: none; }
+  #vaultNameBox {
+    position: fixed; z-index: 85; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(480px, 92vw);
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 12px; box-shadow: 0 18px 60px rgba(0,0,0,.65); padding: 16px 18px 14px;
+  }
+  #vaultNameTitle { margin: 0 0 6px; font-size: 17px; font-weight: 700; }
+  #vaultNameBox p { margin: 0 0 10px; color: var(--dim); font-size: 12.5px; line-height: 1.6; }
+  #vaultNameRow { display: flex; gap: 8px; align-items: center; }
+  #vaultNameInput {
+    flex: 1 1 auto; min-width: 0; font: inherit; font-size: 15px; padding: 7px 9px;
+    background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 7px;
+  }
+  #vaultNameInput:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  #vaultNameSuffix { color: var(--dim); font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
+  #vaultNameHint { min-height: 1.5em; margin: 8px 0 2px; font-size: 12px; }
+  #vaultNameHint.err { color: var(--hit-2); }
+  #vaultNameActions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+  .vnBtn {
+    font: inherit; font-size: 13px; padding: 6px 15px; border-radius: 7px;
+    border: 1px solid var(--line); background: var(--panel2); color: var(--fg); cursor: pointer;
+  }
+  .vnBtn.primary { border-color: var(--accent); background: var(--accent); color: #fff; font-weight: 600; }
+
+  #aboutBackdrop { position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,.55); }
+  /* 關連成功的小視窗（作者 2026-11-08）：壓在 About 之上 */
+  #assocDoneBackdrop { position: fixed; inset: 0; z-index: 86; background: rgba(0,0,0,.5); }
+  #assocDoneBackdrop[hidden], #assocDoneBox[hidden] { display: none; }
+  #assocDoneBox {
+    position: fixed; z-index: 87; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(24em, 88vw); background: var(--panel); color: var(--fg);
+    border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 18px 60px rgba(0,0,0,.65);
+    padding: 18px 22px 16px; text-align: center;
+  }
+  #assocDoneBox h2 { margin: 0 0 8px; font-size: 17px; }
+  #assocDoneBox p { margin: 0 0 6px; line-height: 1.65; font-size: 14px; }
+  #assocDoneBox code { display: block; margin: 8px 0 14px; font-size: 12px; color: var(--dim); word-break: break-all; }
+  #assocDoneClose {
+    background: var(--accent); color: var(--ink-on-accent); border: 0; border-radius: 7px;
+    font: inherit; font-size: 14px; font-weight: 700; padding: 6px 20px; cursor: pointer;
+  }
+  #assocDoneClose:hover { filter: brightness(1.12); }
+  #aboutBackdrop[hidden], #aboutBox[hidden] { display: none; }
+  #aboutBox {
+    position: fixed; z-index: 81; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(560px, 92vw); max-height: 86vh; overflow: auto;
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 12px; box-shadow: 0 18px 60px rgba(0,0,0,.65); padding: 18px 20px 14px;
+  }
+  .aboutTop { display: flex; align-items: flex-start; gap: 16px; }
+  /* 大一點的 accelon logo 放在左上角 */
+  #aboutLogo { width: 88px; height: 88px; flex: 0 0 auto; border-radius: 14px; image-rendering: auto; }
+  .aboutTitles { min-width: 0; flex: 1 1 auto; padding-top: 2px; }
+  #aboutTitle { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: .01em; color: var(--link); }
+  .aboutSub { margin: 4px 0 8px; font-size: 14px; color: var(--fg); opacity: .85; }
+  .aboutSite { margin: 0; font-size: 13px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; }
+  .aboutSite a { color: var(--accent); text-decoration: none; }
+  .aboutSite a:hover { text-decoration: underline; }
+  .aboutClose {
+    flex: 0 0 auto; background: transparent; color: var(--dim); border: 1px solid transparent;
+    border-radius: 6px; font: inherit; font-size: 16px; line-height: 1; padding: 3px 7px; cursor: pointer;
+  }
+  .aboutClose:hover { color: var(--fg); border-color: var(--line); }
+  .aboutMeta { margin: 16px 0 10px; border-top: 1px solid var(--line); padding-top: 10px; font-size: 13px; }
+  .aboutMeta > div { display: flex; gap: 12px; padding: 2px 0; }
+  .aboutMeta span { width: 5.5em; flex: 0 0 auto; color: var(--dim); }
+  .aboutMeta b { font-weight: 500; word-break: break-all; }
+  .aboutUserId { width: 100%; max-width: 260px; background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 5px; padding: 4px 7px; font: inherit; font-size: 13px; }
+  .aboutUserId:focus { outline: none; border-color: var(--accent); }
+  .aboutUserSave { margin-left: 6px; }
+  .revisionEditor { color: var(--dim); font-size: 11.5px; }
+  /* 「留言給作者」（作者 2026-10-18）：在微信旁邊，開系統瀏覽器到官網的留言頁 */
+  .aboutMsg {
+    margin-left: 10px; font-size: 12px; font-weight: 600; color: var(--ink-on-accent);
+    background: var(--accent); border-radius: 6px; padding: 2px 9px;
+    text-decoration: none; white-space: nowrap;
+  }
+  .aboutMsg:hover { filter: brightness(1.08); text-decoration: none; }
+  .aboutUpdate {
+    display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--dim);
+    border-top: 1px solid var(--line); padding-top: 10px;
+  }
+  .aboutUpdate.found { color: var(--gold); }
+  #aboutInstall {
+    margin-left: auto; background: var(--accent); color: var(--ink-on-accent); border: 0; border-radius: 6px;
+    font: inherit; font-size: 13px; padding: 4px 14px; cursor: pointer;
+  }
+  #aboutInstall[hidden] { display: none; }
+  /* 「▶ 操作導覽」＋「啟動時顯示本頁面」（作者 2026-10-18） */
+  .aboutActions {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    border-top: 1px solid var(--line); margin-top: 10px; padding-top: 12px;
+  }
+  #aboutTour {
+    background: var(--accent); color: var(--ink-on-accent); border: 0; border-radius: 7px;
+    font: inherit; font-size: 15px; font-weight: 700; padding: 7px 18px; cursor: pointer;
+  }
+  #aboutTour:hover { filter: brightness(1.12); }
+  .aboutToggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--dim); cursor: pointer; user-select: none;
+  }
+  .aboutToggle:hover { color: var(--fg); }
+  .aboutFoot { margin: 10px 0 0; font-size: 12px; color: var(--dim); }
+  .aboutKeys { margin: 8px 0 0; font-size: 12px; color: var(--dim); }
+  .aboutKeys b { color: var(--fg); font-variant-numeric: tabular-nums; }
+  /* 「快速鍵」：About 的入口（作者 2026-10-29）。所有快速鍵集中在一張卡片，見 shortcuts.ts。
+     按鈕上不要放「F1」——F1 是操作導覽的鍵，放在這裡會讓人以為它是開卡片的鍵
+     （作者 2026-10-29 指出）。 */
+  #aboutKeys {
+    background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 7px;
+    font: inherit; font-size: 14px; font-weight: 600; padding: 6px 14px; cursor: pointer;
+  }
+  #aboutKeys:hover { border-color: var(--accent); color: var(--accent); }
+  #shortcutBackdrop { position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,.55); }
+  #shortcutBackdrop[hidden], #shortcutBox[hidden] { display: none; }
+  #shortcutBox {
+    position: fixed; z-index: 91; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(780px, 94vw); max-height: 88vh; overflow: auto;
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 12px; box-shadow: 0 18px 60px rgba(0,0,0,.65); padding: 16px 20px 12px;
+  }
+  .skTop { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 12px; }
+  .skTop h2 { margin: 0; font-size: 19px; font-weight: 700; color: var(--link); }
+  .skTop .skCount { font-size: 12px; color: var(--dim); }
+  .skTop .aboutClose { margin-left: auto; }
+  #shortcutBody { columns: 2; column-gap: 28px; }
+  @media (max-width: 720px) { #shortcutBody { columns: 1; } }
+  .skGroup { break-inside: avoid; margin: 0 0 14px; }
+  .skGroup h3 { margin: 0 0 6px; font-size: 13px; font-weight: 700; letter-spacing: .02em; color: var(--gold); }
+  .skNote { margin: 0 0 6px; font-size: 11.5px; line-height: 1.55; color: var(--dim); }
+  .skRow { display: flex; gap: 10px; padding: 3px 0; }
+  .skKeys { flex: 0 0 auto; min-width: 6.2em; display: flex; flex-wrap: wrap; align-items: center; gap: 3px; }
+  .skKeys kbd {
+    font: inherit; font-size: 11.5px; line-height: 1.5; padding: 1px 6px; border-radius: 5px;
+    border: 1px solid var(--line); background: var(--panel2); color: var(--fg);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .skKeys kbd.skLit { font-size: 11px; }
+  .skPlus { font-size: 11px; color: var(--dim); }
+  .skWhat { flex: 1 1 auto; font-size: 12.5px; line-height: 1.55; }
+  .skFoot { margin: 2px 0 0; font-size: 11.5px; color: var(--dim); column-span: all; }
+  .skFoot code { background: var(--code-bg); padding: 1px 4px; border-radius: 4px; }
+  /* the database name lives on the chip (#dbTabs); this rule went with #dbname */  #file { display: none; }   /* the picker is driven by #dbAdd */
+.dbAdd { border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--ink);
+  cursor: pointer; font-size: 13px; padding: 1px 7px; line-height: 1.5; }
+  /* 沒有資料庫時：＋ 右邊閃爍「按＋開啟資料庫」（body 還沒有 .loaded 就顯示）。
+     有庫時整段消失（chips 佔那個位置），關掉最後一個庫又會回來。 */
+  #dbHint { display: none; font-size: 13px; white-space: nowrap; color: var(--gold);
+    background: none; border: 0; padding: 0; font-family: inherit; }
+  body:not(.loaded) #dbHint {
+    display: inline-block; animation: dbHintFlash 1.4s ease-in-out infinite;
+  }
+  @keyframes dbHintFlash {
+    0%, 100% { opacity: .35; color: var(--gold); text-shadow: none; }
+    50% { opacity: 1; color: var(--gold-2); text-shadow: 0 0 12px rgba(255,212,121,.8); }
+  }
+  /* 不喜歡動畫的讀者（系統設定）就只留一行亮字 */
+  @media (prefers-reduced-motion: reduce) {
+    body:not(.loaded) #dbHint { animation: none; opacity: 1; }
+  }
+  .status { font-size: 13px; color: var(--dim); margin-left: auto; }
+  .status.err { color: var(--err); }
+  .status.busy { color: var(--warn); }
+  .status.note { color: var(--fg); max-width: 60vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sideToggle {
+    background: var(--panel2); color: var(--fg); border: 1px solid var(--line);
+    /* 作者 2026-10-18：左右 padding 收窄（9px → 5px），頂端更緊湊 */
+    border-radius: 4px; cursor: pointer; font: inherit; font-size: 15px; padding: 2px 5px; line-height: 1.4;
+  }
+  .sideToggle:hover { border-color: var(--accent); }
+  .sideToggle.off { opacity: .45; }
+  /* 設置（齒輪）：有任一設定不是預設值時，亮起來提示（作者 2026-10） */
+  #settingsBtn.on { border-color: var(--accent); background: var(--hl-bg); color: var(--gold); box-shadow: 0 0 8px rgba(255,212,121,.35); }
+  /* the side toggles show their state by being dimmed when collapsed */
+  #toggleLeft.off, #toggleRight.off { opacity: .45; }
+  /* advanced-only tabs: token browser (left) and the file/meta panes (right) */
+  .advOnly { display: none; }
+  .tabBtn[hidden] { display: none !important; }
+  body:not(.advanced) .advOnly { display: none !important; }
+  body.advanced .advOnly { display: inline-block; }
+  /* 「顯示原始文件」是 label（勾選框＋文字），要用 flex 才排得好看 */
+  body.advanced label.advOnly { display: inline-flex; align-items: center; gap: 3px; }
+
+  main {
+    display: grid;
+    /* draggable: default left / middle / right; a hidden side becomes 0fr.
+       Height comes from the body grid row (1fr), so no 100vh arithmetic. */
+    grid-template-columns: var(--left) 6px var(--center) 6px var(--right);
+    gap: 0; background: var(--line);
+    min-height: 0; overflow: hidden;
+  }
+  .col { background: var(--bg); display: flex; flex-direction: column; overflow: hidden; min-width: 0; min-height: 0; }
+  /* the visible grip between columns */
+  .splitter { background: var(--line); cursor: col-resize; position: relative; }
+  .splitter:hover, .splitter.dragging { background: var(--accent); }
+  .splitter::after {
+    content: ''; position: absolute; inset: 45% 1px; background: var(--dim); border-radius: 1px;
+  }
+  .splitter:hover::after { background: var(--accent); }
+  body.colDragging { cursor: col-resize; user-select: none; }
+  /* narrow screens: collapse both sides regardless of stored width */
+  @media (max-width: 900px) {
+    main { grid-template-columns: 0 0 1fr 0 0; }
+    .splitter { display: none; }
+  }
+
+  /* panes: the column owns the height, the pane content scrolls where needed */
+  .pane { border-bottom: 1px solid var(--line); padding: 10px 12px; overflow: hidden; min-height: 0; display: flex; flex-direction: column; }
+  /* a flex display would otherwise defeat the hidden attribute */
+  .pane[hidden] { display: none; }
+  .pane.scroll { overflow: auto; display: block; }
+  .pane h2 { font-size: 1em; text-transform: uppercase; letter-spacing: .06em; color: var(--dim); margin: 0 0 8px; flex: 0 0 auto; }
+  .pane.grow { flex: 1 1 auto; min-height: 0; }
+  .pane.fixed { flex: 0 0 auto; }
+  .dim { color: var(--dim); }
+  .note { color: var(--dim); font-size: 1em; margin: 8px 0 0; }
+
+  /* tabs (left column) */
+  .tabs { display: flex; gap: 4px; padding: 8px 10px 0; background: var(--bg); flex-wrap: wrap; }
+  .tabBtn {
+    background: var(--panel); color: var(--dim); border: 1px solid var(--line); border-bottom: none;
+    border-radius: 6px 6px 0 0; padding: 0; margin-right: 6px; cursor: pointer; font: inherit; font-size: 1.077em;
+  }
+  .tabBtn.active { background: var(--bg); color: var(--fg); border-color: var(--accent); font-weight: 600; }
+  .tabPane { display: none; }
+  .tabPane.active { display: block; }
+  /* a tab pane that hosts its own scroller fills the pane and lets it scroll */
+  .tabs-host { overflow: hidden; }
+  .tabs-host .tabPane.active { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+  .scrollArea { overflow: auto; min-height: 0; flex: 1 1 auto; }
+  #searchList { overflow: auto; min-height: 0; flex: 1 1 auto; }
+  #tokenRows { overflow: auto; min-height: 0; flex: 1 1 auto; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 1.077em; }
+  th { text-align: left; color: var(--dim); font-weight: 500; padding: 2px 10px 2px 0; white-space: nowrap; vertical-align: top; }
+  td { word-break: break-word; }
+  table.cap td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+  ul { margin: 0; padding-left: 18px; font-size: 1.077em; }
+
+  /* 導出（容量分頁底部）：桌面版才有 */
+  .exportBox {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 8px 10px 10px; border-top: 1px solid var(--border-soft);
+  }
+  .exportBox[hidden] { display: none; }
+  .exportBox .note { margin: 0; }
+
+  /* 檔頭（作者 2026-10）：第一個 source 區塊的原始文字，標籤上色好讀 */
+  .rawHead {
+    margin: 0; padding: 10px 12px; font-family: ui-monospace, Consolas, "Cascadia Mono", monospace;
+    font-size: 12.5px; line-height: 1.75; white-space: pre-wrap; word-break: break-word;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  }
+  .rawHead .xt { color: var(--gold); }
+  .rawHead .xa { color: var(--link); }
+
+  .docItem, .clsChip, .vaChip, .hitBar button {
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 5px; cursor: pointer; font: inherit;
+  }
+  .docItem { display: block; width: 100%; text-align: left; padding: 6px 10px; margin-bottom: 4px; font-size: 1.154em; }
+  .docItem:hover, .clsChip:hover, .vaChip:hover, .hitBar button:hover { background: var(--panel2); border-color: var(--accent); }
+  .docItem.active { border-color: var(--accent); background: var(--hl-bg); }
+  .docName { display: block; font-weight: 600; }
+  .kv { display: flex; justify-content: space-between; gap: 8px; font-size: 1.077em; padding: 1px 0; }
+  .kv span { color: var(--dim); }
+  #tokenClasses { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; }
+  .clsChip { width: auto; margin: 0; font-size: 1em; padding: 3px 9px; }
+  .clsChip.dim { opacity: .6; }
+  #tokenRows { overflow: auto; flex: 1 1 auto; }
+  .tokenRow {
+    display: flex; align-items: baseline; gap: 10px; padding: 3px 6px;
+    border-bottom: 1px solid var(--border-soft); cursor: pointer; font-size: 1.308em;
+  }
+  .tokenRow:hover { background: var(--panel2); }
+  .tokName { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tokSize { color: var(--dim); font-size: .923em; font-variant-numeric: tabular-nums; }
+  .dirty { color: var(--warn); font-weight: 700; }
+  .vaList { display: flex; flex-wrap: wrap; gap: 4px; max-height: 170px; overflow: auto; }
+  .vaChip { width: auto; margin: 0; font-size: .923em; font-variant-numeric: tabular-nums; padding: 2px 8px; }
+  .postingHead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+  .tokBig { font-size: 1.692em; font-weight: 700; }
+  .docHead { font-weight: 600; margin-bottom: 8px; font-size: 1.154em; }
+  /* 右欄跨庫頁標題的次要資訊（No./書名/卷/頁）：正常模式也要看得到（作者 2026-10-31）。
+     不能用 .dim —— body:not(.advanced) .docHead .dim 會把它藏起來。 */
+  .docHeadMeta { color: var(--dim); font-weight: 400; }
+  /* 標題與 breadcrumb 同一行（作者 2026-10-18）：標題保留 .docHead 語意，
+     路徑接在後面；真的排不下時由路徑自己換行，不會把標題擠到另一列。 */
+  /* 標題與 breadcrumb 分成兩列（作者 2026-10-31：同一列時路徑會擠成多行、很難讀）。
+     路徑有自己的整行寬度，長路徑也只會在自己那一列換行。 */
+  .docTop { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; margin-bottom: 8px; }
+  .docTop .docHead { flex: 0 0 auto; min-width: 0; max-width: 100%; margin-bottom: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .docTop .docTrail { flex: 0 1 auto; width: 100%; }
+  /* 閱讀標題的頁碼／行數資訊平時不佔空間；hover 時由 doc-pane 顯示浮層 */
+  .docHeadReading .docMeta { display: none; }
+  .docMetaTip {
+    position: fixed; z-index: 95; pointer-events: none;
+    max-width: min(620px, 90vw); padding: 7px 10px;
+    background: var(--popup-bg); color: var(--popup-fg); border: 1px solid var(--line);
+    border-radius: 7px; box-shadow: 0 12px 34px rgba(0,0,0,.55);
+    font-size: 12px; line-height: 1.65; white-space: normal;
+  }
+
+  /* 標題後面那串統計（頁數／行號／source 區塊／字數）只在進階模式顯示（作者 2026-10） */
+  body:not(.advanced) .docHead .dim { display: none; }
+
+  /* document text (hard line breaks, one row per line) */
+  .docBar { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .docTools { display: flex; align-items: center; gap: 8px; margin-left: auto; font-size: 12px; color: var(--dim); }
+  .fsPick { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+  .fsPick select {
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 4px;
+    font: inherit; font-size: 12px; padding: 1px 2px; cursor: pointer; max-width: 3.6em;
+  }
+  .fsPick select:hover { border-color: var(--accent); }
+  /* 字級按鈕：一小一大的 T（CSS 組出來，不用小圖；作者 2026-10）。
+     底色／字色吃 --chip-bg／--chip-fg：暗色系是黑底白字，亮色系／春綠是淺底深字
+     （作者 2026-10 回報：換主題後還是黑方塊，很突兀）。
+     點一下 +2px、Alt+點 −2px；沒有下拉選單。 */
+  .fsPick.iconOnly { position: relative; margin-left: auto; padding-left: 4px; }
+  .fsPick.iconOnly .fsT {
+    display: inline-flex; align-items: flex-end; gap: 2px; line-height: 1;
+    background: var(--chip-bg, #000); color: var(--chip-fg, #fff);
+    border: 1px solid var(--line); border-radius: 4px;
+    padding: 2px 5px 3px; cursor: pointer;
+  }
+  .fsPick.iconOnly .fsT b { font-weight: 700; color: inherit; }
+  .fsPick.iconOnly .fsT b:first-child { font-size: 9px; }
+  .fsPick.iconOnly .fsT b:last-child { font-size: 15px; }
+  .fsPick.iconOnly:hover .fsT { border-color: var(--accent); }
+  /* 按鈕本身不要有外框／底色（視覺只有裡面的 .fsT） */
+  button.fsStep {
+    appearance: none; background: transparent; border: 0; padding: 0; margin-left: auto;
+    cursor: pointer; color: inherit; font: inherit; line-height: 1;
+  }
+  button.fsStep:focus-visible .fsT { outline: 2px solid var(--accent); outline-offset: 2px; }
+  /* 左右欄的 tabs 也要把字級控制推到最右邊 */
+  #tabsLeft, #tabsRight { align-items: center; }
+  /* 字級只調「清單」與「內文」（作者 2026-10-18）：
+     欄位本身固定在 13px，這樣分頁按鈕、搜尋列、迷你按鈕都不會跟著長大；
+     只有真正在讀的內容（.scrollArea 裡的清單、詞典清單／正文）吃 CSS 變數。
+     內部字級一律用 em → 清單裡每一種文字都同步縮放。 */
+  #colLeft, #colRight { font-size: 13px; }
+  #colLeft .scrollArea, #colLeft #tokenRows { font-size: var(--fs-left, 13px); }
+  #colRight .scrollArea, #colRight .dictList { font-size: var(--fs-right, 13px); }
+  /* 右欄「文字內容」也吃右欄字級：它重用 .docBody（中欄用 --fsdoc），要蓋回來
+     （作者 2026-10：右的字級設定要 apply 到右欄的文字內容） */
+  #colRight .docBody { font-size: var(--fs-right, 13px); }
+  .mini {
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 4px;
+    cursor: pointer; font: inherit; font-size: 12px; padding: 1px 7px;
+  }
+  .mini:hover { border-color: var(--accent); }
+  .docBody { overflow: auto; min-height: 0; flex: 1 1 auto; font-size: var(--fsdoc, 16px); }
+  /* 本文樣式（作者 2026-10-22）：只套在中欄，右欄「文字內容」沿用右欄自己的設定 */
+  #docText .docBody {
+    color: var(--doc-body-color, var(--fg));
+    font-family: var(--doc-body-font, "Accelon Box", "Accelon Siddham Uni", "Accelon Siddham Extra", "Accelon Ranjana", "Times New Roman", "Microsoft JhengHei", "Segoe UI", system-ui, sans-serif);
+    font-size: var(--doc-body-size, var(--fsdoc, 16px));
+  }
+  /* the middle pane only ever scrolls its document body */
+  #docText { display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; }
+
+  /* document tabs: one per linked node. Ctrl/cmd + a linking click opens a new
+     one instead of replacing the current one. */
+  .docTabs { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; flex: 0 0 auto; }
+  .docTabs[hidden] { display: none; }
+  /* 分頁列最右邊：編輯／修訂／正文字級（作者 2026-10-31 從 docBar 搬來，閱讀區最大化） */
+  .docTabTools { margin-left: auto; display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+  .docTabStrip { display: flex; align-items: stretch; gap: 4px; flex-wrap: wrap; min-width: 0; }
+  .docTab {
+    /* 分頁標籤縮小（作者 2026-10-31）：名稱最多約 70px、內距也小一點，少佔閱讀區 */
+    display: flex; align-items: center; gap: 4px; max-width: 120px;
+    background: var(--panel); color: var(--dim); border: 1px solid var(--line); border-bottom: none;
+    border-radius: 6px 6px 0 0; padding: 2px 4px 2px 7px; cursor: pointer; font: inherit; font-size: 12px;
+  }
+  .docTab:hover { color: var(--fg); }
+  .docTab.active { background: var(--bg); color: var(--fg); border-color: var(--accent); font-weight: 600; }
+  .docTabName { max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .docTabClose { color: var(--dim); font-size: 10px; padding: 0 1px; border-radius: 3px; }
+  .docTabClose:hover { color: var(--err); background: var(--panel2); }
+  /* 跨庫分頁（作者 2026-11-01）：這個分頁的文字屬於「不是左欄那一庫」的 adb。
+     只加一條虛線下緣，不改底色（active 的樣式仍然最明顯）。 */
+  .docTab.foreign { border-bottom: 1px dashed var(--gold); }
+  .docTab.foreign .docTabName::before { content: '⇄'; color: var(--gold); font-size: 10px; margin-right: 2px; }
+  /* the page (網頁分頁), NOT the book's folio */
+  .docPager {
+    display: flex; align-items: center; gap: 8px; flex: 0 0 auto;
+    margin-top: 6px; padding-top: 5px; border-top: 1px solid var(--line);
+    font-size: 12.5px; color: var(--dim);
+  }
+  /* 右欄大正分頁的「→SAT」「→圖版」（2026-10-31） */
+  #textBody .xrefTools { display: flex; gap: 6px; margin: 0 0 8px; }
+  #textBody .xrefTools .mini { font-size: 12px; padding: 1px 9px; }
+  .docPager .mini[aria-disabled="true"] { opacity: .4; cursor: default; }
+  /* 翻頁鈕：平常只顯示箭頭（不換行）；文字放 hover，窄視窗也不浪費寬度（作者 2026-10-31） */
+  .docPager .mini { flex: 0 0 auto; white-space: nowrap; }
+  .docPager .mini .pgLabel { display: none; }
+  .docPager .mini:hover .pgLabel { display: inline; }
+  .docPager .mini[aria-disabled="true"]:hover { border-color: var(--line); }
+  .pagerInfo { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* 讀窗到底的訊息（2026-11-05）：2 秒後自動載入更多，點一下立刻載入 */
+  .docEnd {
+    margin: 18px auto 26px; padding: 10px 14px; max-width: 460px;
+    border-top: 1px dashed var(--line); text-align: center; color: var(--dim);
+    font-size: 13px; line-height: 1.7; cursor: pointer; user-select: none;
+  }
+  .docEnd:hover { color: var(--fg); }
+  .docEnd span { display: block; }
+  .docEnd .docEndHint { font-size: 12px; opacity: .8; }
+  /* 右欄「文字內容」分頁（純參考的另一段本文）＋ 本文區空白時由 adb 內取出的 logo */
+  .textTabs { display: flex; align-items: stretch; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; flex: 0 0 auto; }
+  .docLogoArea { display: flex; align-items: center; justify-content: center; padding: 26px 10px; }
+  .docLogoArea[hidden] { display: none; }
+  .docLogoArea img { max-width: 62%; max-height: 52vh; opacity: .92; border-radius: 6px; }
+  /* 第一次使用：還沒有資料庫時，本文區的引導卡（2026-10-30） */
+  #docWelcome {
+    max-width: 560px; margin: 40px auto; padding: 18px 20px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; line-height: 1.8;
+  }
+  #docWelcome h2 { margin: 0 0 10px; font-size: 1.12em; color: var(--gold); }
+  #docWelcome p { margin: 0 0 10px; }
+  #docWelcome code { background: var(--panel2); border-radius: 3px; padding: 0 3px; }
+  #docWelcome .welcomeBtns { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 12px; }
+  #docWelcome .mini { font-size: 14px; padding: 6px 12px; }
+  #docWelcome .mini.primary { border-color: var(--accent); color: var(--accent); }
+  .docLine { display: flex; gap: 10px; padding: 1px 3px; border-radius: 3px; position: relative; }
+  .docLine:hover { background: var(--row-hover); }
+  /* 頁標記落在「圖版」那一行時，貼在圖的右下角。
+     厚觀法師 2026-11-13：「（38p107 的頁碼標記）再下移一點，放在〔圖表 HG02.106-2〕
+     表格的最後一行『赤銅鍱部』右邊」。圖版是整塊的圖，頁標記接在它後面，浮動元素
+     會落在這個行盒的**第一條基線**上 —— 看起來像頁碼在圖的開頭（量到 38p107 就浮在
+     「根本大眾部」那一列）。改成絕對定位貼行盒底端，就是紙本頁碼的位置。
+     瀏覽器不認得 :has() 時退回原樣（浮在行首），不影響閱讀。 */
+  .docLine:has(svg, img) .lineText > .pageBreak,
+  .docLine:has(svg, img) .lineText > .pageMark {
+    float: none; position: absolute; right: 6px; bottom: 2px; margin: 0;
+  }
+  /* 目前釘住的那一行：淡淡一層就好，免得標題（現在是彩色字）看起來像有底色 */
+  .docLine.hitLine { background: rgba(255, 212, 121, .10); }
+  /* 載入更多：新塞進來的第一行閃 2 秒，告訴讀者從哪開始讀（作者 2026-11-06） */
+  .docLine.newTextFlash { animation: newTextFlash 2s ease-out both; }
+  @keyframes newTextFlash {
+    0% { background: rgba(255, 209, 102, .55); box-shadow: inset 4px 0 0 rgba(255, 209, 102, .95); }
+    35% { background: rgba(255, 209, 102, .30); }
+    100% { background: transparent; box-shadow: inset 4px 0 0 transparent; }
+  }
+/* 跳至：大正藏引用「2，206a15-b13」指到的整段（作者 2026-10） */
+.docLine.jumpHit { background: rgba(255, 209, 102, .16); box-shadow: inset 3px 0 0 rgba(255, 209, 102, .55); }
+/* 跳至：字元級位置（`db?頁#a-b`）只塗那幾個字（CSS Custom Highlight，2026-10-30） */
+::highlight(accelonCharBand) { background-color: rgba(255, 209, 102, .42); color: inherit; }
+  /* 作者 2026-11-03：閱讀一律軟換行，不要水平捲（原書硬換行保留，但不裁切長行） */
+  .lineText { white-space: pre-wrap; overflow-wrap: anywhere; flex: 1 1 auto; min-width: 0; }
+
+  /* ---- 表格（作者 2026-11-06）--------------------------------------------------
+     `<表>` 的管線表與 `<圖文字>` 的框線表都收成同一個 .docTable。每列仍是 .docLine
+     （id=L{n}、data-src），每格是 .lineText —— 塗紅、錨點、捲動都照原來的方式走；
+     <tr>/<td> 只是讓欄寬交給瀏覽器排。 */
+  .docTable { margin: 10px 0 12px; overflow-x: auto; border-radius: 6px; }
+  /* .docLine 平常是 flex；在表格裡一定要交還給 table layout，否則每列各排各的 */
+  .docTable tr.docLine { display: table-row; }
+  .docTable table { border-collapse: collapse; width: 100%; font-size: .96em; line-height: 1.6;
+    /* 欄數多時不要硬塞進視窗寬度（科判表 11 欄會一字一行）；讓它溢出、由容器橫向捲動 */
+    min-width: calc(var(--cols, 2) * 6em); }
+  .docTable caption.tCap { caption-side: top; text-align: left; color: var(--dim); font-size: .9em; padding: 0 2px 6px; }
+  .docTable th, .docTable td { border: 1px solid var(--line); padding: 5px 10px; text-align: left; vertical-align: top; min-width: 4.2em; }
+  .docTable thead th { background: color-mix(in srgb, var(--panel2) 70%, transparent); font-weight: 600; white-space: nowrap; }
+  .docTable tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--panel2) 32%, transparent); }
+  /* 空白格就是空白（作者 2026-11-06）：不放符號，但保留列底色 */
+  .docTable tr.tPage td { border-left: 0; border-right: 0; background: transparent; padding: 1px 10px;
+    text-align: right; color: var(--dim); font-size: .82em; font-variant-numeric: tabular-nums; }
+  /* 列高亮：tr 是 table-row，背景照樣畫得出來 */
+  .docTable tr.hitLine td { background: rgba(255, 212, 121, .10); }
+  .docTable tr.jumpHit td { background: rgba(255, 209, 102, .16); }
+  .docTable tr.jumpHit td:first-child { box-shadow: inset 3px 0 0 rgba(255, 209, 102, .55); }
+  /* 連排模式（.docBody.reflow）不能把表格的列改成 inline */
+  .docBody.reflow .docTable tr.docLine { display: table-row; }
+  .docBody.reflow .docTable .lineText { white-space: normal; overflow-wrap: anywhere; }
+  /* 解析不了框線表時的等寬顯示：框線圖至少要對得齊 */
+  .figText { margin: 8px 0 10px; padding: 8px 12px; border-radius: 6px; overflow-x: auto;
+    background: color-mix(in srgb, var(--panel2) 45%, transparent); }
+  .figText .docLine { padding: 0; }
+  .figText .lineText { white-space: pre; overflow-wrap: normal;
+    font-family: "Cascadia Mono", Consolas, "MS Gothic", ui-monospace, monospace; font-size: .92em; line-height: 1.35; }
+  /* `<表>說明</表>` 這種單行圖說：置中、小一號 */
+  .docLine.tableCaption { justify-content: center; text-align: center; color: var(--dim); font-size: .92em; padding: 6px 0 2px; }
+  /* 掃描原圖收在表格下面（作者 2026-11-06）：文字表優先，校對時再展開 */
+  .docTable .tblSrc { margin: 8px 2px 0; font-size: .85em; color: var(--dim); }
+  .docTable .tblSrc > summary { display: inline-block; cursor: pointer; padding: 2px 9px; border: 1px solid var(--line); border-radius: 999px; }
+  .docTable .tblSrc > summary:hover { border-color: var(--accent); color: var(--fg); }
+  .docTable .tblSrcImg { margin: 8px 0 0; overflow-x: auto; }
+  /* 原圖不受 .lineText 的 2.2em 限制：這裡就是要看整張掃描 */
+  .docTable .tblSrcImg img, .docTable .tblSrcImg svg { display: block; max-width: 100%; height: auto; }
+  /* cs 的 `<詞 b j>`：單擊開 lex-pane；只加細虛線，不改變閱讀節奏。 */
+  .lineText .word { cursor: pointer; border-bottom: 1px dotted color-mix(in srgb, var(--accent) 45%, transparent); }
+  .lineText .word:hover { background: var(--hl-bg); border-bottom-color: var(--accent); }
+  /* vedic 的 `<詞 w="1">` 是詞級錨，不是詞典條目：不要看起來像可點 lex 詞。 */
+  .lineText .word[data-w] { cursor: text; border-bottom: 0; }
+  /* 詞級定位（vedic 的 `#N`／`#詞`）：和搜尋的 <mark> 疊加，不互相覆蓋。 */
+  .word-hl { background: var(--hl-bg, rgba(255,209,102,.35)); border-radius: 3px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent); }
+  /* 本文上方的 breadcrumb（作者 2026-10）：字級同內文、顏色同標題；
+     點一個節點下拉同層 siblings，並突顯目前這一個。
+     作者 2026-10-18：從 .docBody 搬到 head 區（#docText 的直屬子節點）**固定住**，
+     捲動本文時它不會跟著跑掉，讀者隨時能跳去別的 tree node。 */
+  .docTrail {
+    /* 在 .docTop 這一列裡（標題後面）：真的排不下時由它自己換行，不把標題擠到另一列 */
+    flex: 1 1 auto; min-width: 0;
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px;
+    margin: 0; padding: 0;
+    /* 它在 .docBody 外面，所以自己取 --fsdoc（＝中欄正文的字級）才維持「字級同內文」 */
+    /* 路徑可以比正文小一點（作者 2026-10-31）：0.86 倍，長路徑也少佔寬度 */
+    font-size: calc(var(--fsdoc, 16px) * 0.86); font-weight: 400; line-height: 1.5;
+  }
+  /* 標題與路徑之間用一條細線隔開（詞典型 adb 沒有標題，就不加線） */
+  /* 路徑自己一列：不需要左邊的直線與內距（2026-10-31） */
+  .docHead + .docTrail { padding-left: 0; border-left: 0; }
+  /* 跨庫分頁的提示條（作者 2026-11-01）：麵包屑屬於左欄那一庫，不能拿別庫的 VA 去查，
+     所以改顯示「本文來自〈庫名〉」＋一顆「到它的目錄」（＝按 🌲）。 */
+  .docTrailForeign { align-items: center; gap: 6px; color: var(--dim); }
+  .docTrailForeign .trailForeign b { color: var(--gold); font-weight: 600; }
+  .docTrailForeign .trailForeignGo { font-size: .92em; padding: 1px 6px; }
+  .trailWrap { position: relative; display: inline-flex; }
+  .docTrail .trail {
+    background: transparent; border: 0; padding: 0 3px; border-radius: 3px; cursor: pointer;
+    font: inherit; font-size: 1em; font-weight: 400; color: var(--tagtext, var(--fg)); line-height: inherit;
+  }
+  .docTrail .trail.cur { font-weight: 600; }
+  .docTrail .trail:hover { background: var(--panel2); }
+  .docTrail .trailCaret { font-size: .7em; margin-left: 3px; opacity: .6; }
+  .docTrail .trailSep { color: var(--dim); font-size: .9em; padding: 0 2px; }
+  /* 目前這一節的 siblings（作者 2026-10）：直接排在路徑後面，短標籤、可點就換節 */
+  .docTrail .trailSibs { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 2px 4px; }
+  /* 同層太多時只放一個下拉（作者 2026-10-18）：目前這一節＋「同層 N」 */
+  .docTrail .trailCount { color: var(--dim); font-size: .8em; margin-left: 4px; }
+  .docTrail .trailSib {
+    background: transparent; border: 0; border-radius: 3px; padding: 0 3px; cursor: pointer;
+    font: inherit; font-size: 1em; color: var(--tagtext, var(--fg)); opacity: .78; line-height: inherit;
+  }
+  .docTrail .trailSib:hover { background: var(--panel2); opacity: 1; }
+  .docTrail .trailSib.cur {
+    background: var(--hl-bg); box-shadow: inset 2px 0 0 var(--accent);
+    color: var(--tagtext, var(--fg)); opacity: 1; font-weight: 600; cursor: default; padding: 0 4px;
+  }
+  .trailMenu {
+    position: absolute; z-index: 40; top: 100%; left: 0; margin-top: 2px;
+    min-width: 12em; max-height: 46vh; overflow: auto;
+    background: var(--panel); border: 1px solid var(--accent); border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.6); padding: 4px;
+  }
+  /* 下拉不節略（作者 2026-10）：完整標籤、不省略、不截斷 */
+  .trailMenu .trailItem {
+    display: block; width: 100%; text-align: left; background: transparent; border: 0;
+    border-radius: 5px; font: inherit; font-size: 13px; padding: 3px 8px; cursor: pointer;
+    color: var(--tagtext, var(--fg)); white-space: nowrap; overflow: visible; text-overflow: clip;
+    max-width: none;
+  }
+  .trailMenu .trailItem:hover { background: var(--panel2); }
+  .trailMenu .trailItem.active { background: var(--hl-bg); font-weight: 700; box-shadow: inset 2px 0 0 var(--accent); }
+  /* 內文渲染（render_accelon3.ts）：標題用**字色**，不用底色 ——
+     底色在深色主題上不夠明顯（作者 2026-10）。目錄樹的色點也用同一個
+     `--tag-text-N`（作者 2026-11-05），兩邊顏色才會一致。 */
+  .lineText .h {
+    color: var(--tagtext, var(--accent));
+    background: none; border-radius: 3px; padding: 0 2px; font-weight: 600;
+  }
+  /* 科判（厚觀法師 2026-11-12）：「（三）經論中所說的『慈心功德』」這一層應該用
+     新細明體，並反顏色。紙本上科判是 11pt 新細明體加框，本文才是楷體；電子版先前
+     科判跟本文一樣是黑體，顏色也只是標籤色，法師一眼看出不同。
+     做法：科判階層（項／目／小目／細目，不含章、節——那兩個是書的大標題）改用明體，
+     並把「字色」與「底色」對調（底色＝該層的標籤色，字色＝頁面底色），也就是反白。
+     深色主題下是一條淺色底、深色字的科判條；淺色主題下自動變成深底白字。 */
+  .lineText .h[data-tag="項"],
+  .lineText .h[data-tag="目"],
+  .lineText .h[data-tag="小目"],
+  .lineText .h[data-tag="細目"] {
+    font-family: var(--ming);
+    font-weight: 700;
+    background: var(--tagtext, var(--accent));
+    color: var(--bg);
+    padding: 0 .18em;
+    border-radius: 2px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  /* 原書頁 <頁>：頁碼一律靠右（厚觀法師 2026-11-10「錯誤02」）。
+     2026-10-31 原本是 inline，理由是「block 會把後文擠到下一行」；但 inline 的結果是
+     頁碼卡在句子中間（5p42 就落在「等於沒有。5p42 一般人以為…」中間），法師回報
+     「有的在最左、有的夾在中間，沒有統一靠右」。
+     改成 float:right：頁碼浮到該行右端，後面的文字自然換到下一行——正好是紙書的
+     樣子，又不會像 block 那樣多佔一整行。 */
+  .lineText .pageBreak {
+    float: right; margin: 0 0 0 6px; color: var(--pageMark, #d99a2b); font-size: .8em; font-weight: 400;
+    white-space: nowrap;
+  }
+  /* 不保留硬換行（「原書分行」取消）時：整頁連著排 */
+  .docBody.reflow .docLine { display: inline; }
+  .docBody.reflow .lineText { white-space: normal; overflow-wrap: break-word; }
+  /* 作者 2026-11-01：連排時本文只縱向捲動。行內元素的左右 padding 或超長
+     不可斷字串會讓 scrollWidth 多幾 px，瀏覽器就長出水平捲軸；水平溢出直接裁掉。 */
+  .docBody.reflow { overflow-x: hidden; }
+  .docPara { margin: 0 0 .7em; }
+  .docParaHeading { margin: .4em 0 .2em; }
+  /* 取消原書分行時，<頁> 只是行內的小字頁碼 */
+  .lineText .pageMark { color: var(--dim); font-size: .8em; margin: 0 3px; }
+  /* <聯 n="詞">：詞條連結（別名、參見）。目標由 link.ts 的 linkToEntry 解析 */
+  .lineText .entryLink { color: #2e7a80; text-decoration: none; border-bottom: 1px dotted currentColor; cursor: pointer; white-space: nowrap; }
+  .lineText .entryLink:hover { color: #b26949; text-decoration: underline; }
+  /* <聯 i="taisho?…">大正</聯>：大正引用的短晶片，小字＋圓角圈起來（作者 2026-10-31）。
+     只作用在 .xrefLink；<聯 n="…"> 的條目連結（.entryLink 沒有 xrefLink）與
+     .embedChip 不受影響。顏色沿用 .entryLink 的連結色，hover 加深、不加底線。 */
+  .lineText a.entryLink.xrefLink {
+    font-size: 11px;
+    line-height: 1.2;
+    padding: 0 5px;
+    margin: 0 2px;
+    border: 1px solid currentColor;
+    border-radius: 9px;
+    text-decoration: none;
+    vertical-align: 0.1em;
+    opacity: .85;
+  }
+  .lineText a.entryLink.xrefLink:hover {
+    color: var(--accent);
+    opacity: 1;
+    text-decoration: none;
+    border-color: currentColor;
+  }
+  /* <嵌 i="db?page">：文內嵌入晶片；點一下在下面插入引文，再點收合 */
+  .lineText .embedChip {
+    display: inline-flex; align-items: center; gap: 2px; vertical-align: baseline;
+    margin: 0 2px; padding: 0 5px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--panel2); color: var(--accent); font: inherit; font-size: .78em;
+    line-height: 1.45; cursor: pointer; white-space: nowrap;
+  }
+  .lineText .embedChip:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--panel2)); }
+  .lineText .embedChip.is-open { color: var(--fg); border-color: var(--accent); }
+  .embedBlock {
+    margin: 3px 0 6px 1.2em; padding: 5px 9px 6px; border-left: 3px solid var(--accent);
+    background: color-mix(in srgb, var(--accent) 6%, var(--panel)); border-radius: 0 5px 5px 0;
+    font-size: .92em; line-height: 1.6; white-space: normal; word-break: break-word;
+  }
+  .embedBlock .embedText, .embedBlock .embedSegment, .embedBlock .embedItem { white-space: normal; overflow-wrap: anywhere; }
+  .embedHead { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; color: var(--dim); font-size: .82em; }
+  .embedGroup .embedHead { font-size: .92em; }
+  .embedSrc { color: var(--accent); font-weight: 600; }
+  .embedPage { font-family: ui-monospace, monospace; }
+  .embedClose { margin-left: auto; border: 0; background: transparent; color: var(--dim); font: inherit; font-size: .9em; cursor: pointer; }
+  .embedClose:hover { color: var(--fg); text-decoration: underline; }
+  .embedText { color: var(--fg); }
+  .embedGroup .embedSegment {
+    margin: 2px 0 7px; padding: 6px 9px; border-left: 3px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+    background: var(--panel2, var(--panel));
+    color: var(--doc-body-color, var(--fg));
+    font-family: var(--doc-body-font, inherit);
+    font-size: var(--doc-body-size, var(--fsdoc, 1em));
+    line-height: 1.7;
+  }
+  .embedItems { display: flex; flex-direction: column; gap: 7px; }
+  .embedItem { border-top: 1px dashed var(--line); padding-top: 5px; }
+  .embedItem .embedSrc { display: flex; align-items: center; gap: 6px; margin-bottom: 1px; font-size: .8em; }
+  .embedSrcName { color: var(--accent); font-weight: 600; }
+  .embedTLink {
+    display: inline-flex; align-items: center; gap: 1px; padding: 0 5px;
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); border-radius: 4px;
+    background: color-mix(in srgb, var(--accent) 9%, transparent); color: var(--accent);
+    font: inherit; font-size: .92em; line-height: 1.5; cursor: pointer;
+  }
+  .embedTLink:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .embedTLink .embedTArrow { font-size: .9em; opacity: .8; }
+  .embedSegStart { display: inline; }
+  ::highlight(embedLit) {
+    background-color: color-mix(in srgb, var(--accent) 26%, transparent);
+    color: inherit;
+  }
+  .docLine.embedLitLine { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+  .embedHint { margin-left: auto; color: var(--dim); font-size: .95em; font-weight: 400; }
+  .embedFlash { animation: embedFlash 1.15s ease-out; }
+  @keyframes embedFlash {
+    0% { box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--accent) 70%, transparent); }
+    100% { box-shadow: inset 0 0 0 0 transparent; }
+  }
+  .embedText mark.embedHit, .embedText mark.xrefHit { background: color-mix(in srgb, var(--accent) 22%, transparent); color: inherit; border-radius: 2px; padding: 0 1px; }
+  .embedLoading, .embedError { color: var(--dim); font-size: .9em; padding: 4px 0; }
+  .embedError { color: var(--err); }
+  /* 引文塗紅（<mark class="xrefHit">）：跨庫引文在目標頁上的位置 */
+  mark.xrefHit { background: #ffd166; color: #1a1a1a; border-radius: 2px; padding: 0 1px; }
+  /* 反鏈（2026-10-28）：右欄跨庫頁面標題下的一排；可依頻次／來源序／目標序重排 */
+  .xrefRevBar { margin: 6px 0 10px; display: flex; flex-direction: column; gap: 6px; }
+  .revTop { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+  .revTitle { font-weight: 600; color: var(--fg); }
+  .revTitle b { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .revFrom { min-width: 0; max-width: 46%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .revSortSeg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .revSortSeg button { background: transparent; color: var(--dim); border: 0; border-right: 1px solid var(--line); font: inherit; font-size: 11px; padding: 2px 7px; cursor: pointer; }
+  .revSortSeg button:last-child { border-right: 0; }
+  .revSortSeg button.active { background: var(--accent); color: var(--ink-on-accent, #fff); font-weight: 700; }
+  .revSortSeg button:hover { color: var(--fg); }
+  .revChips { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+  .xrefRev { font-size: 12px; }
+  .xrefRev.is-hidden { display: none; }
+  .xrefRevN { color: var(--gold, #c9a227); font-size: 10px; margin-left: 3px; font-variant-numeric: tabular-nums; }
+  .xrefMore { font-size: 12px; color: var(--dim); }
+  .revShowAll { font-size: 12px; color: var(--dim); border-style: dashed; }
+  .revShowAll:hover { color: var(--accent); border-color: var(--accent); }
+  .revHeatBtn { color: var(--dim); }
+  /* 回連結嵌在經文裡（作者 2026-10-28）：跟在 <頁> 分隔後面，隨文字捲動 */
+  .xrefRevInline { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin: 2px 0 10px; font-size: 12px; color: var(--dim); }
+  /* 嵌在經文行首的版本（作者 2026-10-28）：跟著那一行，不佔一整列 */
+  .docLine .xrefRevInline, .lineText .xrefRevInline { display: inline-flex; margin: 0 6px 0 0; vertical-align: middle; }
+  .xrefRevInline .mini { font-size: 11px; }
+  /* 引用分布熱圖（2026-10-28）：fixed overlay，不影響閱讀位置 */
+  #revHeat { position: fixed; inset: 4vh 4vw; z-index: 96; background: var(--panel, var(--bg)); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,.55); display: flex; flex-direction: column; }
+  #revHeat[hidden] { display: none; }
+  .revHeatTop { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  .revHeatTop b { font-size: 15px; }
+  .revHeatTop select { background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; font: inherit; font-size: 12px; padding: 2px 5px; }
+  .revHeatTop .aboutClose { margin-left: auto; }
+  .revHeatBody { overflow: auto; padding: 10px 14px 16px; }
+  .revHeatMain { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+  .revHeatWrap { flex: 1 1 0; min-width: 0; max-width: 100%; overflow: auto; }
+  .revHeatGrid { display: grid; grid-auto-rows: 20px; gap: 2px; width: max-content; font-size: 10px; }
+  .hgCorner { color: var(--dim); font-size: 9px; white-space: nowrap; align-self: end; padding-right: 5px; }
+  .hgCol { color: var(--dim); font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; align-self: end; padding: 0 1px 2px; }
+  .hgRow { color: var(--dim); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 20px; padding-right: 4px; }
+  .hgCell { border-radius: 2px; text-align: center; line-height: 20px; font-variant-numeric: tabular-nums; overflow: hidden; }
+  .hgTot { color: var(--gold, #c9a227); text-align: right; line-height: 20px; font-variant-numeric: tabular-nums; padding-left: 4px; }
+  .revHeatTable { border-collapse: separate; border-spacing: 2px; font-size: 11px; width: auto; }
+  .revHeatTable th { font-weight: 400; color: var(--dim); }
+  .revHeatTable th.corner { color: var(--dim); font-size: 10px; text-align: left; white-space: nowrap; padding-right: 6px; }
+  .revHeatTable th.hcol { height: auto; vertical-align: bottom; padding: 0 1px; font-size: 9px; line-height: 1.15; max-width: 44px; }
+  .revHeatTable th.hcol span { display: block; max-width: 44px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .revHeatTable th.hrow { text-align: right; white-space: nowrap; padding-right: 5px; max-width: 170px; overflow: hidden; text-overflow: ellipsis; }
+  .revHeatTable td.heatCell { width: 28px; height: 20px; min-width: 28px; text-align: center; border-radius: 2px; font-size: 10px; font-variant-numeric: tabular-nums; color: var(--fg); white-space: nowrap; overflow: hidden; }
+  .revHeatTable td.heatTot { color: var(--gold, #c9a227); text-align: right; padding-left: 6px; font-variant-numeric: tabular-nums; }
+  .revHeatTops { flex: 0 0 310px; display: flex; flex-direction: column; gap: 12px; margin-top: 0; }
+  .revHeatTops > div { min-width: 0; }
+  .revHeatTops h4 { margin: 0 0 4px; font-size: 12px; color: var(--dim); font-weight: 600; }
+  .revHeatTops ol { margin: 0; padding-left: 20px; font-size: 12px; line-height: 1.7; }
+  .revHeatTops li span { margin-right: 8px; }
+  .revHeatTops li b { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .revHeatNote { margin: 10px 0 0; font-size: 11px; }
+  /* 引紋頁籤（2026-10-28）：不開跨庫頁面也能看；列／欄標題 sticky */
+  .tabPane[data-tab="heat"] { flex-direction: column; min-height: 0; }
+  .glossLang { display:inline-flex; align-items:center; justify-content:center; width:1.4em; height:1.4em; margin-right:5px; border:1px solid currentColor; border-radius:50%; font-size:10.5px; line-height:1; vertical-align:0.05em; }
+  .glossLang.sk { color:#d2a24c; }
+  .glossLang.pi { color:#5fae6b; }
+  .glossLang.tb { color:#a97fd6; }
+  .glossHan, .glossForeign { cursor: pointer; }
+  .glossHan:hover, .glossForeign:hover { color: var(--accent); text-decoration: underline; }
+  .glossFind { cursor: pointer; opacity: .55; margin-left: 4px; }
+  .glossFind:hover { opacity: 1; color: var(--accent); }
+  .heatToolbar { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--line); flex: 0 0 auto; }
+  .heatTitle { color: var(--link); }
+  .heatArrow { color: var(--dim); font-size: 17px; line-height: 1; user-select: none; }
+  .heatToolbar label { display: inline-flex; gap: 4px; align-items: center; color: var(--dim); font-size: 12px; }
+  .heatToolbar select { background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; font: inherit; font-size: 12px; padding: 2px 4px; max-width: 190px; }
+  .heatHelp { padding: 2px 10px 4px; font-size: 11px; line-height: 1.5; min-height: 1.4em; }
+  .heatSeg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .heatSeg button { background: transparent; color: var(--dim); border: 0; border-right: 1px solid var(--line); font: inherit; font-size: 11px; padding: 2px 7px; cursor: pointer; }
+  .heatSeg button:last-child { border-right: 0; }
+  .heatSeg button.active { background: var(--accent); color: var(--ink-on-accent, #fff); font-weight: 700; }
+  .heatSeg button:hover { color: var(--fg); }
+  .heatStats { font-size: 11px; margin-left: auto; }
+  .heatBody { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 8px 10px; }
+  /* 縮圖與明細分高度（作者 2026-10-31：100% 縮放時縮圖太高，heatDetail 看不到）。
+     縮圖最多 38vh／320px，而且空間不夠時可以縮（flex-shrink），明細至少 120px。 */
+  .heatMiniWrap { flex: 0 1 auto; min-height: 0; max-height: min(38vh, 320px); display: flex; flex-direction: column; }
+  .heatMiniHead { display: flex; gap: 8px; align-items: baseline; font-size: 11px; margin-bottom: 3px; }
+  .heatMiniScroll { flex: 1 1 auto; min-height: 48px; overflow: auto; border: 1px solid var(--line); border-radius: 4px; padding: 4px; }
+  .heatScroll { flex: 1 1 auto; min-height: 0; overflow: auto; border: 1px solid var(--line); border-radius: 4px; }
+  #heatFull[hidden] { display: none; }
+  .heatGrid { display: grid; grid-auto-rows: 20px; gap: 2px; width: max-content; font-size: 10px; }
+  .heatGrid .hgCol { position: sticky; top: 0; z-index: 3; background: var(--bg); }
+  .heatGrid .hgRow { position: sticky; left: 0; z-index: 2; background: var(--bg); }
+  .heatGrid .hgCorner { position: sticky; top: 0; left: 0; z-index: 4; background: var(--bg); }
+  .heatMini { grid-auto-rows: 7px; gap: 1px; }
+  .heatMini .hgCell { line-height: 7px; font-size: 0; border-radius: 0; }
+  .heatMini .hgCell[title] { cursor: default; }
+  .heatMini .hgCell[data-mr0] { cursor: pointer; }
+  .heatDetail { flex: 1 1 auto; min-height: 120px; overflow: auto; border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px 10px; }
+  .heatDetailHead { display: flex; gap: 8px; align-items: baseline; margin: 4px 0 6px; flex-wrap: wrap; }
+  .heatDetailHead b { color: var(--gold, #c9a227); font-size: 12.5px; font-weight: 600; }
+  .heatDetailHead .mini { margin-left: auto; }
+  .heatDetailList { display: flex; flex-direction: column; }
+  .heatDetail .revListRow { padding: 4px 2px; }
+  .heatDetailMore { margin: 6px 0 0; font-size: 11px; }
+  /* 反鏈清單抽屜 */
+  #revList { position: fixed; top: 4vh; right: 3vw; bottom: 4vh; width: min(640px, 46vw); z-index: 95; background: var(--panel, var(--bg)); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,.55); display: flex; flex-direction: column; }
+  #revList[hidden] { display: none; }
+  .revListTop { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  .revListTop b { font-size: 15px; }
+  .revListTop input { flex: 1 1 160px; min-width: 120px; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; font: inherit; font-size: 12px; padding: 3px 6px; }
+  .revListTop .aboutClose { margin-left: auto; }
+  .revListSort { padding: 6px 14px; border-bottom: 1px solid var(--line); }
+  .revListBody { overflow: auto; flex: 1 1 auto; min-height: 0; padding: 4px 10px 12px; }
+  .revListGroup { color: var(--gold, #c9a227); font-size: 12px; font-weight: 600; margin: 10px 0 3px; }
+  .revListRow { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 2px 8px; width: 100%; text-align: left; background: transparent; color: var(--fg); border: 0; border-bottom: 1px solid var(--line); font: inherit; padding: 5px 3px; cursor: pointer; }
+  .revListRow:hover { background: var(--hl-bg, rgba(255,255,255,.06)); }
+  .revListBook { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; }
+  .revListPage { color: var(--gold, #c9a227); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .revListN { color: var(--gold, #c9a227); font-size: 10px; font-variant-numeric: tabular-nums; }
+  .revListQuote { grid-column: 1 / -1; color: var(--dim); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* <註 n="…"/> ↔ <釋 n="…">：像 Markdown 腳注（作者 2026-10-26）。
+     註是上標的小連結，hover 顯示釋文；點註跳到釋、點釋（或它的編號）跳回註。 */
+  /* 平行段對讀（作者 2026-11-02）：`<段 n>` 的晶片與下拉 */
+.lineText .segChip {
+  display: inline-flex; align-items: center; vertical-align: baseline;
+  margin: 0 2px; padding: 0 4px; border: 1px solid var(--line); border-radius: 6px;
+  background: transparent; color: var(--dim); font: inherit; font-size: .68em;
+  font-variant-numeric: tabular-nums; cursor: pointer; line-height: 1.5;
+}
+.lineText .segChip:hover { color: var(--fg); border-color: var(--accent); background: var(--panel2); }
+.lineText .segChip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+#segMenu {
+  position: fixed; z-index: 96; min-width: 260px; max-width: min(420px, 92vw); max-height: 60vh; overflow: auto;
+  background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 8px;
+  box-shadow: 0 12px 36px rgba(0,0,0,.55); padding: 6px;
+}
+#segMenu .segHead {
+  display: flex; align-items: baseline; gap: 8px; padding: 4px 8px 6px;
+  font-weight: 700; font-size: 13px; border-bottom: 1px solid var(--line); margin-bottom: 4px;
+}
+#segMenu .segHead span { color: var(--dim); font-weight: 400; font-size: 11.5px; }
+#segMenu .segRow {
+  display: flex; align-items: baseline; gap: 8px; width: 100%; text-align: left;
+  background: transparent; color: var(--fg); border: 0; border-radius: 6px;
+  font: inherit; font-size: 13px; padding: 5px 8px; cursor: pointer;
+}
+#segMenu .segRow:hover { background: var(--panel2); }
+#segMenu .segRow.cur { background: var(--hl-bg); }
+#segMenu .segRow.todo { color: var(--dim); cursor: not-allowed; }
+#segMenu .segFile { color: var(--dim); font-family: ui-monospace, Consolas, monospace; font-size: 11.5px; }
+#segMenu .segName { flex: 1 1 auto; }
+#segMenu .segTag {
+  color: var(--gold); border: 1px solid var(--line); border-radius: 999px;
+  font-size: 10.5px; padding: 0 6px;
+}.lineText .noteRef {
+    color: var(--link); text-decoration: none; font-size: .72em;
+    vertical-align: super; padding: 0 1px; cursor: pointer;
+  }
+  .lineText .noteRef:hover { color: var(--accent); text-decoration: underline; }
+  /* 圖上自己畫了注號之後（厚觀法師 2026-11-12），圖前那一行 `[13][14]…` 就多餘了：
+     注號已經長在圖上，這一列整個收起來（元素留著，`.docLine` 的 id 還在，
+     釋文點回本文時 notes.ts 會改捲到下面那一張圖）。 */
+  .docLine.noteRefsMerged { display: none; }
+  .lineText .noteBack { color: var(--gold); text-decoration: none; font-size: .8em; padding: 0 3px 0 0; cursor: pointer; }
+  .lineText .noteBack:hover { text-decoration: underline; }
+  .lineText .noteBody { cursor: text; white-space: normal; overflow-wrap: anywhere; }   /* 注文可以換行（長註才不會被切在右邊）；釋文本身不點擊（2026-10-31，只有編號可回本文） */
+  /* 腳注整體預設用**明體**（厚觀法師 2026-11-12 19:27：「腳注為何都是標楷體？
+     一般還是用新細明體，引文才用標楷體」）。紙本的腳注是 11pt 新細明體，楷體只給引文；
+     先前注文沒有自己的字體，跟著本文（讀者把本文設成楷體）一起變楷體，整片腳注都是楷體。
+     寫在 `.quote`／`.fmt-kai` 之前，讓引文那兩條（同權重、後出）仍然蓋得過。 */
+  .lineText .noteBody { font-family: "Times New Roman", var(--ming); }
+  /* 腳注裡的引文（<經>）用楷體；其餘注文維持本文（厚觀法師 2026-11-09：不是全部腳注都用楷體） */
+  .lineText .noteBody .h[data-tag="經"] { font-family: "Times New Roman", var(--kai) !important; }
+  /* Word 的粗體、引文楷體、上標（2026-11-11）。
+     這三個標籤以前**沒有渲染分支**：資料裡有 39,770 個 `<粗>`、5,646 個 `<經>`，
+     但不在目錄樹的 `t=` 清單裡，被當成「不認識的標籤」整支丟掉——文字留著、樣式全無。
+     厚觀法師從 2026-11-09 起反覆回報的「腳注[9] 標楷體沒生效、該加粗處沒加粗」，
+     以及早先的「08 粗體未保留」，根因都在這裡（資料層一直是對的）。
+     `.h[data-tag="經"]` 那條留著：萬一將來 `<經>` 進了目錄樹 `t=` 清單仍適用。 */
+  .lineText .fmt-bold { font-weight: 700; }
+  .lineText .fmt-kai { font-family: var(--kai); }
+  .lineText .fmt-sup { vertical-align: super; font-size: .75em; line-height: 0; }
+  /* 註↔釋往返：目標行與編號閃一下（作者 2026-10-31） */
+  .docLine.noteTarget {
+    background: var(--hl-bg); box-shadow: inset 3px 0 0 var(--accent);
+    animation: noteFlash 5s ease-in-out 2;   /* 厚觀法師 2026-11-09：反白時間太短，至少 10 秒 */
+  }
+  @keyframes noteFlash {
+    0%, 100% { background: var(--hl-bg); }
+    50% { background: rgba(255, 212, 121, .28); }
+  }
+  .lineText .noteRef.noteTargetMark, .lineText .noteBack.noteTargetMark {
+    outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 3px;
+  }
+  /* 圖（SVG）上的注號：hover 換色、跳回來時也換色（outline 在 SVG 內不一定畫得出來） */
+  .inlineSvg a.noteRef { cursor: pointer; }
+  .inlineSvg a.noteRef:hover text { fill: var(--accent); }
+  .inlineSvg a.noteRef.noteTargetMark text { fill: var(--accent); font-weight: 700; }
+  /* 圖版上的注號自己一個顏色（厚觀法師 2026-11-13：「我瀏覽器用黑底，藍色的腳注看不見」）。
+     為什麼會變藍：圖版同時帶 `inlineSvg` 與 `figureSvg` 兩個類，吃到 `svg.inlineSvg` 的
+     `fill: currentColor`，而 `.lineText .noteRef` 又把 <a> 的 color 設成 --link（淺藍 #7cc0ff）；
+     暗色系整張圖再過 `invert(1) hue-rotate(180deg)`，淺藍就變成深藍 #0f5392，貼在黑底上幾乎看不到。
+     現在注號走 --note-mark：暗色系給反轉前的深棕（螢幕上是淡琥珀），淺色主題直接給 --gold。
+     hover／閃示也不再換成 --accent（那在暗色系同樣會被反轉成深藍），改成加底線。 */
+  .lineText svg.figureSvg a.noteRef text { fill: var(--note-mark); }
+  .lineText svg.figureSvg a.noteRef:hover text { fill: var(--note-mark); text-decoration: underline; }
+  .lineText svg.figureSvg a.noteRef.noteTargetMark text {
+    fill: var(--note-mark); text-decoration: underline; font-weight: 700;
+  }
+  /* <引>：CBETA 的引文，用楷體（2026-10-30）；字級略大 1.02em，楷體看起來才不會偏小 */
+  .lineText .quote { font-family: var(--kai); font-size: 1.02em; }
+  /* 「線條字元排的圖表」（厚觀法師 2026-11-12 82 頁「文字編排不整齊」）：
+     這種表用 ┌│└├┤─ 加全形空白排出欄位，紙本靠等寬字對齊。
+     原本每一列都被當成一個段落 → 兩側縮排＋行距，欄位就散了；明體裡線條字元是全寬，
+     換成明體、收緊行距、去掉段落縮排，才會跟紙本一樣。 */
+  .docLine.figArt { line-height: 1.3; }
+  .docLine.figArt .lineText { font-family: var(--ming); }
+  .docLine.figArt .paraIndent { display: none; }
+  .docLine.figArt br.para { display: none; }
+  /* 線條字元一律佔一個全形字寬（見 render_accelon3.ts 的 figArt 註解） */
+  .lineText .boxd { display: inline-block; width: 1em; text-align: center; }
+  /* 這種表格裡的注號（法師特別交代「注意：有腳注23」）：縮成上標小字，仍可點回本文。
+     它要剛好佔**一個全形格**，後面的欄位才對得上：字級 .62em，寬度就給 1/0.62 = 1.6129em
+     （兩者相乘剛好 1em）。資料端因此讓它後面少留一格（見 src/fix_figart_yl38.py）。
+     不能只靠 `width:0` 讓它溢出——那會被逐字折行，`[23]` 變成豎排。 */
+  .docLine.figArt .noteRef,
+  .docLine.figArt .noteBack {
+    font-size: .62em; vertical-align: super;
+    display: inline-block; width: 1.6129em; text-align: center; padding: 0;
+    white-space: nowrap;
+  }
+  /* <术 sk|pi|tb="…">：術語（作者 2026-10-31）。漢詞只加虛線，**不上色**；
+     只有 hover 模式掛 title（外語提示），inline 模式外語直接接「（外語）」，
+     off 模式只留漢詞。若想自訂顏色，可自行加 .term-sk／.term-pi／.term-tb 規則。 */
+  .lineText .term { border-bottom: 1px dotted currentColor; }
+  .lineText .term.has-tip { cursor: help; }
+  .lineText .termGloss { font-size: .92em; margin-left: .1em; }
+  .docHr { border: 0; border-top: 1px solid var(--line); margin: 12px 0 10px; }
+  #noteTip {
+    position: fixed; z-index: 94; max-width: min(480px, 82vw); max-height: 45vh; overflow: auto;
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .55); padding: 8px 11px;
+    font-size: 15px; line-height: 1.75; white-space: pre-wrap;
+  }
+  /* 註解提示（2026-11-01）：上面先顯示「用到這個註的那句」，下面才是注文 */
+  /* 這段原文屬於哪一節（作者 2026-11-02）：hover `<釋>` 的原文提示上方顯示目錄路徑，不可點 */
+  #noteTip .noteCrumb {
+    color: var(--dim); font-size: 12px; line-height: 1.6; padding-bottom: 4px; margin-bottom: 4px;
+    border-bottom: 1px dashed var(--line); white-space: normal;
+  }
+  #noteTip .noteCtx { color: var(--fg); font-size: 15px; line-height: 1.75; padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px dashed var(--line); }
+  #noteTip .noteCtx::before { content: '原文　'; color: var(--dim); font-size: 12px; }
+  #noteTip .noteCtxRef { color: var(--dim); font-size: 12px; }
+  #noteTip .noteCtxRef.noteCtxMark { color: #231a05; background: var(--gold, #d9a93a); border-radius: 3px; padding: 0 3px; font-weight: 700; font-size: 13px; }
+  #noteTip .noteBody { color: var(--muted2, var(--fg)); font-size: 15px; line-height: 1.8; }
+  /* 書籤（2026-10-28） */
+  .selMenu { position: fixed; z-index: 100; display: flex; flex-direction: column; min-width: 112px; padding: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 7px; box-shadow: 0 10px 30px rgba(0,0,0,.55); }
+  .selMenu[hidden] { display: none; }
+  .selMenu button { background: transparent; color: var(--fg); border: 0; border-radius: 4px; font: inherit; font-size: 12.5px; text-align: left; padding: 5px 9px; cursor: pointer; }
+  .selMenu button:hover { background: var(--hl-bg, rgba(255,255,255,.08)); color: var(--accent); }
+  /* 兩層選單（2026-10-30）：第一層 搜尋／複製／查看，第二層在右邊展開 */
+  .selGroup { position: relative; }
+  .selGroupBtn { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; }
+  .selCaret { color: var(--dim); font-size: 10px; line-height: 1; }
+  .selGroup.open > .selGroupBtn { color: var(--accent); }
+  .selSub {
+    position: absolute; top: -5px; left: calc(100% - 2px); z-index: 101;
+    display: flex; flex-direction: column; min-width: 152px; padding: 4px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 7px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.55);
+  }
+  .selSub[hidden] { display: none; }
+  .selMenu.flip .selSub { left: auto; right: calc(100% - 2px); }
+  .selDivider { height: 1px; margin: 4px 2px; background: var(--line); }
+  .selMenu .selMinor { color: var(--dim); font-size: 11.5px; }
+  .bmRow { display: flex; align-items: stretch; border-bottom: 1px solid var(--line); }
+  .bmJump { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; background: transparent; color: var(--fg); border: 0; text-align: left; font: inherit; padding: 7px 4px; cursor: pointer; }
+  .bmJump:hover { background: var(--hl-bg, rgba(255,255,255,.06)); }
+  .bmTitle { color: var(--gold, #c9a227); font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bmText { color: var(--dim); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bmDel { flex: 0 0 auto; background: transparent; color: var(--dim); border: 0; font-size: 12px; padding: 0 7px; cursor: pointer; }
+  .bmDel:hover { color: var(--err, #e06c75); }
+  #bookmarkMeta { display: flex; align-items: center; gap: 8px; }
+  .bmMetaText { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bmTools { flex: 0 0 auto; display: flex; gap: 4px; }
+  .bmTool { background: transparent; color: var(--dim); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; font: inherit; font-size: 11.5px; cursor: pointer; }
+  .bmTool:hover { color: var(--fg); border-color: var(--gold, #c9a227); }
+  /* 詞書 <例 t="…"/>：只有標題是帶框線的小標籤；內文列不加框，避免整頁都是框 */
+  .docLine.liHeadLine { display: block; background: transparent; border: 0; padding: 0; margin-top: 9px; }
+  .liHead { display: inline-block; color: var(--li-color); border: 1px solid var(--li-color); border-radius: 6px; background: var(--li-bg); padding: 1px 8px; font-size: 12.5px; font-weight: 600; letter-spacing: .02em; }
+  /* <詞 py="…" zy="…">：詞頭旁的注音／拼音；不參與選取，避免引用帶到注釋 */
+  .dictHead { font-size: 1.3em; font-weight: 600; }
+  .homograph { font-size: .58em; font-weight: 500; color: var(--dim); vertical-align: super; margin-left: 1px; }
+  .dictPron { margin-left: .55em; color: var(--dim); font-size: .78em; white-space: nowrap; user-select: none; }
+  .dictPron .pronZy { margin-right: .45em; }
+  /* <彈 t="…">：hover 1 秒才顯示提示；t 不是正文的一部分 */
+  .tan { border-bottom: 1px dotted var(--dim); cursor: help; }
+  .tanTip { position: fixed; z-index: 96; pointer-events: none; max-width: min(460px, 80vw); background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 5px 8px; line-height: 1.45; white-space: pre-wrap; box-shadow: 0 2px 10px rgba(0,0,0,.35); }
+  .lineText .pageBreak::before { content: none; }
+  .lineText .pageBreak .pageId { font-variant-numeric: tabular-nums; border-bottom: 1px dotted currentColor; }
+  /* <段/> → <br class="para"> ＋ 兩個全形空格 */
+  .lineText br.para { line-height: inherit; }
+  /* <圖 n="…"/>：正文插圖。字形圖（金文、小篆）常常就嵌在句子中間，所以
+     尺寸跟著行高走、垂直置中，不撐開行距；點一下開原尺寸。 */
+  .lineText img.inlineImg {
+    height: 1.5em; width: auto; vertical-align: -.35em;
+    margin: 0 1px; border-radius: 2px;
+    /* 字形圖是透明背景＋黑墨，深色主題會看不見：一律鋪白紙底（像貼上的字卡） */
+    background: #fff; padding: 1px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .10);
+    /* 點一下開 #imgView 看原圖（滾輪縮放、拖曳）；圖版也在這條路徑上 */
+    cursor: zoom-in;
+  }
+  .lineText img.inlineImg:hover { outline: 1px solid var(--accent); height: 2.2em; }
+  /* 內嵌 SVG（小篆字形）：跟著字色／主題走，不必鋪白底、也不必裝字型（作者 2026-10-28）。
+     width:auto 讓每個字用自己的 bbox 比例，不會被拉成方塊。 */
+  .lineText svg.inlineSvg {
+    height: 1.5em; width: auto; vertical-align: -.35em;
+    margin: 0 1px; color: inherit; fill: currentColor;
+    cursor: zoom-in;
+  }
+  .lineText svg.inlineSvg:hover { height: 2.4em; outline: 1px solid var(--accent); border-radius: 2px; }
+  /* 字形庫的動態字形（作者 2026-11-06）：**原字留在 `.gwT`（透明、可選取、算進漢字序號）**，
+     SVG 絕對定位疊上去。寬高都跟著字級走（1em），所以標題放大、字級設定、瀏覽器縮放都自動跟上。
+     ⚠ 這裡刻意不用 `display:none`／`visibility:hidden` 藏原字 —— 那會讓選取與複製抓不到字。 */
+  .lineText .gw {
+    display: inline-block; position: relative;
+    width: 1em; height: 1em; line-height: 1;
+    vertical-align: -0.22em;
+  }
+  .lineText .gwT { color: transparent; -webkit-text-fill-color: transparent; }
+  .lineText .gwG {
+    position: absolute; left: 0; top: 0; width: 1em; height: 1em; display: block;
+    fill: currentColor; pointer-events: none;
+  }
+  .lineText .gw:hover { outline: 1px solid var(--accent); border-radius: 2px; }
+  /* 圖版（整張插圖，`<圖 t="圖版">`）：照原圖實寸（inline style 的 width）顯示，
+     不是 1.5em 的字形；窄視窗靠 max-width 收窄，長圖靠 max-height 不超出畫面。 */
+  .lineText svg.figureSvg {
+    height: auto; width: auto; max-width: 100%; max-height: 70vh;
+    vertical-align: middle; margin: .4em .35em .4em 0;
+    /* Visio 匯出的圖是黑墨透明底：深色主題會看不見，和 img.inlineImg 一樣鋪白紙 */
+    background: #fff; padding: 4px; border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .10);
+    color: #000;
+  }
+  /* 暗色模式的「圖表自適應背景色」（原「SVG 圖反轉」，作者 2026-10-31／2026-11-02）：
+     SVG 與 PNG 圖版都反轉，黑墨變亮、不必再鋪白紙。
+     只作用在圖（figureSvg／figureImg 與看圖視窗）；跟著字色走的 inlineSvg 不動。 */
+  html.svg-invert .lineText svg.figureSvg,
+  html.svg-invert .lineText img.figureImg {
+    background: transparent; box-shadow: none; padding: 0;
+    filter: invert(1) hue-rotate(180deg);
+  }
+  html.svg-invert #imgViewImg.svg,
+  html.svg-invert #imgViewImg.rasterFigure {
+    background: transparent !important;
+    filter: invert(1) hue-rotate(180deg);
+  }
+  .lineText svg.figureSvg:hover { height: auto; outline: none; }
+  /* 圖版的點陣版（`.gif`／`.png`，沒有 SVG 可 inline 時）：同樣照原寸、不鋪滿整行 */
+  .lineText img.figureImg {
+    height: auto; width: auto; max-width: 100%; max-height: 70vh;
+    vertical-align: middle; margin: .4em .35em .4em 0;
+    background: #fff; padding: 4px; border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .10);
+  }
+  .lineText img.figureImg:hover { height: auto; outline: none; }
+  .lineText .inlineImgMissing {
+    display: inline-block; min-width: 1em; text-align: center;
+    border: 1px dashed var(--line); border-radius: 2px; color: var(--dim);
+  }
+  /* 命中／關鍵字塗色：色相由 --hue 決定（多詞組查詢每個詞組一個 HSV 色相）。
+     單詞組時 --hue 是 0（紅色），與以前的樣式一致。 */
+  mark.docHit, mark.kw {
+    background: hsl(var(--hue, 32) 90% 38%);
+    color: var(--mark-fg); border-radius: 2px; padding: 0 2px;
+  }
+  mark.docHit { box-shadow: 0 0 0 1px hsl(var(--hue, 32) 95% 62%); }
+  mark.kw { padding: 0 1px; }
+  mark.kw.cur { box-shadow: 0 0 0 1px var(--fg); }
+  /* 搜尋命中落在圖版（藏在 svg 後面的那份文字）時，在**圖上**反白
+     （厚觀法師 2026-11-15：「能否讓它反顏色？」）。
+     底色用一個 rect（`.svgHitBox`，由 paint.ts 依 getBBox 畫），字填米白——
+     與正文的 mark.docHit 同一個配色。!important 是要蓋過 svg 自己內嵌的
+     `<style>`（Visio 匯出的 .st2 之類會指定 fill）。 */
+  #docText svg .svgHitBox { fill: hsl(var(--hue, 32) 90% 38%) !important; }
+  #docText svg .svgHit { fill: var(--mark-fg) !important; }
+  /* 暗色系整張圖版會過 `invert(1) hue-rotate(180deg)`（上面 html.svg-invert 那條），
+     底色與字也會被反掉（深紅變粉紅、米白變深色）。這裡對這兩個標記再套一次同樣的
+     濾鏡，等於抵銷：畫面上仍是深紅底、米白字，與正文的 mark.docHit 一致。 */
+  html.svg-invert #docText svg .svgHitBox,
+  html.svg-invert #docText svg .svgHit { filter: invert(1) hue-rotate(180deg); }
+  /* 圖上找不到那幾個字（點陣圖、或字被拆散）：退一步框住整張圖 */
+  #docText svg.hitFigure {
+    outline: 2px solid hsl(var(--hue, 32) 92% 60%);
+    outline-offset: 4px;
+  }
+  /* 摘要上方的詞組徽章（idf 旁邊那個） */
+  .kwTag {
+    display: inline-block; padding: 0 5px; border-radius: 4px; font-size: 12px;
+    background: hsl(var(--hue, 32) 80% 30%); color: var(--mark-fg); border: 1px solid hsl(var(--hue, 32) 80% 45%);
+  }
+
+  .thumbGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 6px; }
+  .thumb { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 4px; text-align: center; }
+  .thumb img { max-width: 100%; max-height: 62px; display: block; margin: 0 auto 2px; background: #fff; }
+  .thumb span { font-size: .769em; color: var(--dim); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .thumb.thumbImg { cursor: zoom-in; }
+  .thumb.thumbImg:hover, .thumb.thumbImg:focus-visible { border-color: var(--accent); outline: none; }
+  /* 本文行 hover 的頁位置小提示（debug 選項，作者 2026-10-29） */
+  .lineTip {
+    position: fixed; z-index: 95; pointer-events: none;
+    background: var(--panel2); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 4px; padding: 2px 8px; font-size: .85em;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .35); font-variant-numeric: tabular-nums;
+  }
+  input[type=file] { color: var(--fg); font: inherit; font-size: 13px; }
+
+  /* ---- 圖片放大（作者 2026-10-26） ---- */
+  #imgViewBackdrop { position: fixed; inset: 0; z-index: 96; background: rgba(0,0,0,.72); }
+  #imgViewBackdrop[hidden], #imgView[hidden] { display: none; }
+  #imgView {
+    position: fixed; z-index: 97; inset: 18px; display: flex; flex-direction: column;
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 10px; box-shadow: 0 18px 60px rgba(0,0,0,.65); overflow: hidden;
+  }
+  .ivHead { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-bottom: 1px solid var(--line); flex: 0 0 auto; }
+  .ivName { flex: 1 1 auto; min-width: 0; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ivTools { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+  .ivBtn, .ivSave {
+    background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 6px;
+    font: inherit; font-size: 12.5px; padding: 3px 10px; cursor: pointer;
+  }
+  .ivBtn:hover, .ivSave:hover { border-color: var(--accent); }
+  .ivSave { background: var(--accent); color: var(--ink-on-accent); border-color: var(--accent); font-weight: 600; }
+  .ivPct { min-width: 3.6em; text-align: center; color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .ivStage { flex: 1 1 auto; overflow: auto; padding: 14px; background: var(--bg); cursor: grab; touch-action: none; }
+  .ivStage.dragging { cursor: grabbing; }
+  .ivCanvas { min-width: 100%; min-height: 100%; display: flex; align-items: center; justify-content: center; }
+  #imgViewImg { display: block; max-width: none; user-select: none; -webkit-user-drag: none; }
+
+  /* full text search */
+  .searchBar { display: flex; gap: 6px; margin-bottom: 8px; position: relative; }
+  /* 檢索模式標記（作者 2026-11-01）：顯示在搜尋框右側，與 ☆ 並排（不再絕對定位，避免重疊） */
+  .queryMode {
+    display: inline-flex; align-items: center; flex: 0 0 auto;
+    pointer-events: none; font-size: 11px; color: var(--dim);
+    background: var(--panel2); border: 1px solid var(--line); border-radius: 4px;
+    padding: 1px 6px; white-space: nowrap;
+  }
+  .queryMode[hidden] { display: none; }
+  #savedOpen { flex: 0 0 auto; }
+  #query { min-width: 0; }
+  .searchBar input {
+    flex: 1 1 auto; background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 5px; padding: 4px 8px; font: inherit; font-size: 1.231em; min-width: 0;
+  }
+  .searchBar input:focus { outline: none; border-color: var(--accent); }
+  /* 輸入區 cheat card（作者 2026-11-01）：focus 且空白 1.5 秒後出現在正下方；
+     有輸入或失焦就收起。pointer-events:none，不會搶走輸入框的 focus。 */
+  .cheatCard {
+    position: fixed; z-index: 84; pointer-events: none;
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 8px; box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+    padding: 8px 10px; font-size: 12px; line-height: 1.6;
+  }
+  .cheatCard[hidden] { display: none; }
+  .cheatCard .ccHead { color: var(--dim); margin-bottom: 3px; }
+  .cheatCard b { color: var(--gold); font-weight: 600; }
+  .cheatCard code { font-family: ui-monospace, Consolas, monospace; color: var(--link); }
+  .cheatCard .ccFoot { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .cheatCard .ccNote { flex: 1 1 auto; color: var(--dim); font-size: 11.5px; line-height: 1.45; }
+  .cheatCard button {
+    pointer-events: auto; font: inherit; font-size: 12px; cursor: pointer;
+    background: var(--panel2); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 5px; padding: 2px 10px;
+  }
+  .cheatCard button:hover { border-color: var(--accent); color: var(--accent); }
+  /* 已存輸入：分頁籤＋清單（2026-11-12） */
+  .cheatCard .ccTabs { display: flex; gap: 4px; margin: -2px 0 6px; padding-bottom: 4px; border-bottom: 1px solid var(--line); }
+  .cheatCard .ccTab { background: transparent; border: 1px solid transparent; color: var(--dim); padding: 2px 9px; border-radius: 5px; }
+  .cheatCard .ccTab:hover { color: var(--accent); border-color: var(--line); }
+  .cheatCard .ccTab.active { background: var(--panel2); color: var(--fg); border-color: var(--line); }
+  .cheatCard .ccPane[hidden] { display: none; }
+  .cheatCard .ccList { display: flex; flex-direction: column; gap: 2px; max-height: 42vh; overflow: auto; pointer-events: auto; }
+  .cheatCard .ccEmpty { color: var(--dim); font-size: 11.5px; padding: 4px 2px; line-height: 1.5; }
+  .cheatCard .ccItem { display: flex; align-items: center; gap: 4px; }
+  .cheatCard .ccItem > .ccPick {
+    flex: 1 1 auto; min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; background: transparent; border: 0; padding: 2px 4px; color: var(--fg);
+  }
+  .cheatCard .ccItem > .ccPick:hover { color: var(--accent); }
+  .cheatCard .ccItem > .ccDel { background: transparent; border: 0; color: var(--dim); padding: 0 6px; }
+  .cheatCard .ccItem > .ccDel:hover { color: var(--err); }
+  .cheatCard .ccFoot { flex-wrap: wrap; }
+  /* 融視圖（R1 V6）：整段重排的色帶，有別於速覽摺疊的 .embedDoc */
+  .fusionToggle { display: inline-flex; gap: 4px; align-items: center; font-size: 12px; color: var(--dim); margin: 0 0 6px; cursor: pointer; }
+  /* 沒有 <融> 的庫要真的看不到：`display:inline-flex` 會蓋掉 hidden 屬性的 display:none
+     （作者樣式優先於 UA 樣式），所以補這一條。法師 2026-11-14 反映 fuyan 出現不該有的勾選框。 */
+  .fusionToggle[hidden] { display: none !important; }
+  .fusionBlock { display: block; border-left: 3px solid var(--accent); background: var(--panel2); padding: 2px 8px; margin: 2px 0; border-radius: 0 5px 5px 0; }
+  .fusionSrc { display: block; font-size: 11px; color: var(--dim); }
+  .fusionBody .fusionLine { display: block; }
+  /* R6：子樹截斷的「繼續展開」鈕 */
+  .embedMore { display: block; margin: 4px auto 0; font-size: 11px; }
+  /* R7：反鏈抽屜「載入更多」鈕 */
+  .revMore { display: block; margin: 8px auto; font-size: 12px; }
+  .searchBar button {
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 5px; cursor: pointer; font: inherit; padding: 0 10px;
+  }
+  .searchBar button:hover { border-color: var(--accent); }
+  .searchBar select.modeSel {
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 5px; cursor: pointer; font: inherit; font-size: 1em; padding: 0 4px;
+  }
+  /* 名詞的「開頭／中間／結尾」三態 toggle（作者 2026-10）：按一下換下一個。
+     作者 2026-10-18：符合的詞條數放進按鈕裡（只放數字，不寫「個詞條」）。 */
+  .searchBar button.modeBtn {
+    background: var(--panel2); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 5px; cursor: pointer; font: inherit; font-size: .92em; padding: 2px 8px;
+    white-space: nowrap;
+  }
+  .searchBar button.modeBtn:hover { border-color: var(--accent); }
+  .searchBar button.modeBtn[data-mode="start"] { color: var(--gold); }
+  .searchBar button.modeBtn[data-mode="mid"] { color: var(--link); }
+  .searchBar button.modeBtn[data-mode="end"] { color: var(--ok); }
+  #termsMode .modeCount {
+    color: var(--fg); opacity: .85; font-size: .95em; margin-left: 5px;
+    font-variant-numeric: tabular-nums;
+  }
+  #termsMode .modeCount:empty { display: none; }
+  .snippet {
+    background: var(--panel); border: 1px solid var(--line); border-left: 3px solid transparent;
+    border-radius: 5px; padding: 6px 9px; margin-bottom: 6px; cursor: pointer; font-size: 1.154em;
+  }
+  .snippet:hover { background: var(--panel2); }
+  .snippet.active { border-left-color: var(--accent); background: var(--hl-bg); }
+  .snippetHead { font-size: .885em; color: var(--dim); margin-bottom: 2px; }
+  /* 摘要最後的書名：比正文小一級、顏色暗一級（作者 2026-10-29） */
+  .snippetBook { font-size: .82em; color: var(--dim); margin-left: .6em; white-space: nowrap; }
+  .snippet mark { background: hsl(var(--hue, 32) 90% 38%); color: var(--mark-fg); border-radius: 2px; padding: 0 2px; }
+  .snippet mark.cur { box-shadow: 0 0 0 1px var(--fg); }
+  /* 對照（goryeo_taisho.adb）：一經一筆；右邊一顆藏名；位置只在 hover 顯示 */
+  .mapHelp { color: var(--dim); font-size: .92em; line-height: 1.65; }
+  .mapHelp p { margin: 0 0 7px; }
+  .mapHelp code { background: var(--panel2); border-radius: 3px; padding: 0 3px; }
+  .mapHit {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 5px;
+    padding: 0 5px; margin-bottom: 3px; cursor: pointer;
+  }
+  .mapHit:hover { background: var(--panel2); }
+  .mapHitName {
+    flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    text-align: left; background: transparent; color: var(--fg); border: 0;
+    font: inherit; font-size: 1em; padding: 2px; cursor: pointer;
+  }
+  .mapHitOpen {
+    flex: 0 0 auto; background: var(--panel2); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 4px; font: inherit; font-size: .84em; padding: 1px 8px; cursor: pointer;
+  }
+  .mapHitOpen:hover { border-color: var(--accent); color: var(--accent); }
+  /* 圈字：大正白底、高麗藍底，紅字粗體、沒有框線（2026-10-30） */
+  .mapMark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; margin-right: 3px; border: 0; border-radius: 50%;
+    font-size: 11px; font-weight: 700; line-height: 1; color: #c62828; vertical-align: -2px;
+  }
+  .mapMarkT { background: #fff; }
+  .mapMarkK { background: #6f9fd8; }
+  /* search groups (tree tier 1: 書/集…) */
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; max-height: 8.6em; overflow: auto; }
+  .chips:empty { display: none; }
+  .chip {
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 4px;
+    cursor: pointer; font: inherit; font-size: .923em; padding: 1px 7px; white-space: nowrap;
+  }
+  .chip:hover { border-color: var(--accent); }
+  .chip.active { border-color: var(--accent); background: var(--hl-bg); }
+  .chip b { font-variant-numeric: tabular-nums; }
+  .chip.zero { opacity: .45; }
+
+  /* directory tree: fixed row height, depth shown by a 30%-lightness colour dot */
+  .tRow {
+    display: flex; align-items: center; gap: 4px; padding: 1px 4px; border-radius: 3px;
+    cursor: pointer; font-size: 1em; line-height: 1.5; white-space: nowrap;
+    color: var(--fg-muted);
+  }
+  .tRow:hover { background: var(--row-hover); }
+  .tTwisty { width: 12px; text-align: center; color: var(--dim); flex: 0 0 auto; font-size: .846em; }
+  /* 打開的節點（▾）比收合的（▸）亮，不然兩個箭頭很難分（作者 2026-11-06） */
+  .tTwisty.open { color: var(--fg-strong); }
+  .tDot { width: 9px; height: 9px; border-radius: 2px; flex: 0 0 auto; opacity: .5; }
+  /* 未打開的節點色點調暗（作者 2026-11-06）：打開／ancestor／current／active 才全亮，
+     這樣「已經展開的枝」在整棵樹裡才跳得出來。 */
+  .tRow.open .tDot, .tRow.ancestor .tDot, .tRow.current .tDot, .tRow.active .tDot { opacity: 1; }
+  .tTag { color: var(--dim); font-size: .846em; flex: 0 0 auto; }
+  /* the tag name (書/章/節…) is not shown in the directory: the colour block
+     already carries the depth, and the name would only repeat it */
+  #dirTree .tTag { display: none; }
+  .tName { overflow: hidden; text-overflow: ellipsis; }
+  .tCount { margin-left: auto; color: var(--dim); font-size: 1em; font-variant-numeric: tabular-nums; }
+  /* 目錄樹的命中數＝按鈕（作者 2026-10-29：純數字看不出可以點） */
+  .tCount.tBtn {
+    padding: 2px 9px; border: 1px solid var(--line); border-radius: 999px;
+    background: var(--panel); cursor: pointer; line-height: 1.4;
+  }
+  .tCount.tBtn:hover { border-color: var(--accent); background: var(--panel2); color: var(--fg); }
+  .tCount.tBtn:active { transform: translateY(1px); }
+  /* Hit badges are graded by how much of the result sits in that realm: the
+     bigger the share, the louder the colour (亮紅 for the heaviest nodes). */
+  .tCount.hit { color: var(--hit-1); font-weight: 600; }
+  .tCount.hit.t2 { color: var(--hit-2); }
+  .tCount.hit.t3 { color: var(--hit-3); }
+  .tCount.hit.t4 { color: var(--hit-4); font-weight: 700; font-size: 1.05em; text-shadow: 0 0 6px rgba(255,23,68,.5); }
+  .tCount.hit.big { font-size: 1.12em; }
+  /* the node whose text the middle pane currently shows, and the node the middle
+     of the document pane sits on (with its ancestors lit) */
+  .tRow.active { background: var(--hl-bg); color: var(--fg-strong); }
+  /* 作者 2026-11-06：ancestor 不再畫底線（不好看），改用字色區分——
+     一般列稍灰（--fg-muted）、ancestor／current 拉亮（--fg-strong）；
+     目前位置仍用「框＋底」，路徑只靠字色。 */
+  .tRow.ancestor { background: none; color: var(--fg-strong); }
+  .tRow.current { background: var(--hl-bg); outline: 1px solid var(--accent); border-radius: 3px; color: var(--fg-strong); }
+  #dirTree { padding: 0; }
+  /* 虛擬目錄（作者 2026-11-02）：只掛視窗附近的列，列高固定才能用 spacer 撐總高。 */
+  #dirTree.virtualList .tRow {
+    height: var(--vrow-h, 22px); box-sizing: border-box; overflow: hidden;
+  }
+  #dirTree .vSpacer { flex: 0 0 auto; pointer-events: none; }
+/* 作者 2026-10：`.dbTabs` 吃掉剩下的寬度 → 狀態列與齒輪被推到最右邊。
+   不能只靠 `.status { margin-left:auto }`：狀態列隱藏時（display:none）那個 auto 就沒了，
+   齒輪會黏在 chips 後面。 */
+.dbTabs { display: inline-flex; gap: 4px; align-items: center; flex: 1 1 auto; min-width: 0; }
+/* every chip keeps the same metrics in every state: only the colours change, and the
+   ✕ is always laid out (visibility), so activating a chip moves nothing */
+.dbTabs .dbChip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line);
+  border-radius: 6px; padding: 1px 6px; font: inherit; font-size: 13px; font-weight: 600;
+  line-height: 1.5; cursor: pointer; color: var(--ink); }
+.dbTabs .dbChip:hover { border-color: var(--accent); background: rgba(90,169,255,.08); }
+.dbTabs .dbChip.active { border-color: var(--accent); background: rgba(90,169,255,.14); color: var(--fg); }
+/* owner（作者 2026-11-01）：這個庫有本文分頁（可能是跨庫並存的分頁）。
+   只加一圈淡外框與左下小圓點，**不改變 active**：active 仍是「左欄正在顯示的庫」。 */
+.dbTabs .dbChip.owner:not(.active) { border-color: rgba(232,193,90,.55); }
+.dbTabs .dbChip.owner::after { content: ''; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--gold); opacity: .75; flex: 0 0 auto; }
+.dbTabs .dbChipClose { opacity: 0; margin-left: 2px; }
+.dbTabs .dbChip.active .dbChipClose { opacity: .6; }
+.dbTabs .dbChipClose:hover { opacity: 1; color: var(--hit-2); }
+/* adb 選單（作者 2026-10）：資料夾按鈕移到原本 ＋ 的位置；「加入 adb」是下拉第一項。
+   margin-left:auto 不再需要（`.status` 自己會把後面的東西推到右邊）。 */
+.dbPickWrap { position: relative; display: inline-flex; }
+.dbPickBtn {
+  background: transparent; border: 1px solid var(--line); border-radius: 6px;
+  color: var(--gold); font-size: 15px; line-height: 1; padding: 2px 7px 3px; cursor: pointer;
+}
+.dbPickBtn:hover { border-color: var(--accent); background: var(--panel2); }
+.dbPickBtn.on { border-color: var(--accent); background: var(--hl-bg); box-shadow: inset 0 0 0 1px var(--accent); }
+/* 選單貼在 📁 **正下方、向右展開**（作者 2026-10-18）。寬度由 renderDbPick 依
+   「按鈕左緣到視窗右緣」算好寫進 max-width，所以不會像以前那樣溢出畫面左邊。 */
+.dbPickMenu {
+  position: absolute; z-index: 60; top: calc(100% + 4px); left: 0; right: auto;
+  max-width: min(54em, calc(100vw - 260px)); max-height: 60vh; overflow: auto;
+  background: var(--panel); border: 1px solid var(--accent);
+  border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,.6); padding: 4px;
+}
+/* adb 清單是表格（作者 2026-10-18）：ID／檔名／庫名／字數／大小／建置日期。
+   往右靠（right:0）、長名字省略，才不會超出畫面左邊。
+   2026-11-01：表頭可以點，按那一欄升／降冪排序（預設 adb id 字母序）。 */
+.dbPickMenu .dbPickTable { border-collapse: collapse; width: 100%; font-size: 13px; }
+.dbPickMenu .dbPickTable th {
+  text-align: left; font-weight: 600; color: var(--dim); font-size: 11.5px;
+  padding: 0; border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+.dbPickMenu .dbPickTable th:not(.dbPickSortCell) { padding: 3px 8px; }
+.dbPickMenu .dbPickSortBtn {
+  display: inline-flex; align-items: center; gap: 2px; width: 100%;
+  background: transparent; border: 0; color: inherit; font: inherit; font-weight: 600;
+  padding: 3px 8px; cursor: pointer; text-align: left;
+}
+.dbPickMenu .dbPickSortBtn:hover { color: var(--fg); background: var(--panel2); }
+.dbPickMenu .dbPickSortBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.dbPickMenu .dbPickSortCell.on { color: var(--fg); }
+.dbPickMenu .dbPickArrow { font-size: 9px; color: var(--accent); min-width: 8px; }
+.dbPickMenu .dbPickTable td {
+  padding: 4px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 20em;
+}
+.dbPickMenu .dbPickItem { cursor: pointer; }
+.dbPickMenu .dbPickItem:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.dbPickMenu .dbPickItem:hover td { background: var(--panel2); }
+.dbPickMenu .dbPickItem.active td { background: var(--hl-bg); }
+.dbPickMenu .dbPickItem.active td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
+/* 已載入但還沒切成 active 的庫：左邊一條淡線（排序後也找得到自己開著的庫） */
+.dbPickMenu .dbPickItem.loaded td:first-child { box-shadow: inset 2px 0 0 var(--line); }
+.dbPickMenu .dbPickId { color: var(--dim); font-family: ui-monospace, Consolas, monospace; }
+.dbPickMenu .dbPickFile { color: var(--dim); font-family: ui-monospace, Consolas, monospace; max-width: 14em; }
+.dbPickMenu .dbPickDir { color: var(--dim); max-width: 10em; }
+/* 不同資料夾的分界線（以檔案開啟、照資料夾排時；作者 2026-11-08） */
+.dbPickMenu .dbPickTable tr.dbPickSplit td { border-top: 1px solid var(--line); padding-top: 7px; }
+.dbPickMenu .dbPickName { font-weight: 600; }
+.dbPickMenu .dbPickItem.active .dbPickName { font-weight: 700; }
+.dbPickMenu .dbPickChars { text-align: right; font-variant-numeric: tabular-nums; }
+.dbPickMenu .dbPickSize { text-align: right; color: var(--dim); font-variant-numeric: tabular-nums; }
+.dbPickMenu .dbPickDate { color: var(--dim); font-variant-numeric: tabular-nums; }
+.dbPickMenu .dbPickAdd td { color: var(--gold); }
+.dbPickMenu .dbPickItem[aria-disabled="true"] { cursor: not-allowed; }
+.dbPickMenu .dbPickItem[aria-disabled="true"] td { color: var(--dim); opacity: .45; }
+.dbPickMenu .dbPickItem[aria-disabled="true"]:hover td { background: transparent; }
+.dbPickMenu .dbPickEmpty { color: var(--dim); font-size: 12px; padding: 4px 8px; }
+/* ---- 操作導覽（作者 2026-10）：聚光燈 ＋ 說明氣泡 ----
+   聚光燈是「一個貼在目標上的空 div ＋ 9999px 的 box-shadow」：四周壓暗、目標亮著。
+   它一律 pointer-events:none —— 整個導覽從頭到尾都不擋操作（「你來」那幾步更是必須
+   如此），也就不會有「遮罩吃掉點擊」這種事。z-index 高於所有彈窗（80–85）。 */
+#tourSpot {
+  position: fixed; z-index: 89; pointer-events: none;
+  border-radius: 8px; border: 2px solid var(--gold);
+  /* 作者 2026-10-18：四周壓暗從 .55 降到 .40 —— 之前「＋ 加入 adb」在選單裡幾乎看不見 */
+  box-shadow: 0 0 0 9999px rgba(0,0,0,.40), 0 0 22px rgba(255,212,121,.45);
+}
+#tourSpot[hidden] { display: none; }
+#tourBubble {
+  position: fixed; z-index: 90; left: 50%; transform: translateX(-50%);
+  width: min(780px, 92vw); max-height: 48vh; overflow: auto;
+  /* 作者 2026-10-18：底色比面板亮一階、字大一號，讀起來不吃力 */
+  background: var(--popup-bg); color: var(--popup-fg); border: 1px solid var(--accent);
+  border-radius: 12px; box-shadow: 0 18px 60px rgba(0,0,0,.7); padding: 14px 18px 12px;
+}
+#tourBubble[hidden] { display: none; }
+#tourBubble.paused { border-color: var(--warn); }
+.tourHead { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+.tourWhere { flex: 1 1 auto; font-size: 12.5px; color: var(--hint-blue); letter-spacing: .04em; }
+/* 場景主題（作者 2026-10-18）：比說明文字大、比它亮 */
+#tourTitle { font-size: 18px; font-weight: 700; color: var(--link); margin: 0 0 8px; line-height: 1.4; }
+#tourText { font-size: 16.5px; line-height: 1.8; }
+#tourText p { margin: 0 0 8px; }
+#tourText p:last-child { margin-bottom: 0; }
+#tourText b { color: var(--gold); }
+#tourText code { background: var(--code-bg); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; font-size: 14.5px; }
+#tourNote { font-size: 13.5px; color: var(--warn); margin: 8px 0 0; }
+#tourNote[hidden] { display: none; }
+.tourBtns { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.tourProg { flex: 1 1 auto; font-size: 12.5px; color: var(--hint-blue); text-align: right; }
+#tourBubble button {
+  background: var(--panel2); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 7px; font: inherit; font-size: 14px; padding: 6px 14px; cursor: pointer;
+}
+#tourBubble button:hover { border-color: var(--accent); }
+#tourBubble button:disabled { opacity: .4; cursor: default; }
+#tourBubble button.primary { background: var(--accent); color: var(--ink-on-accent); border-color: transparent; font-weight: 700; }
+#tourBubble button[hidden] { display: none; }
+/* 導覽選單：一份劇本一列 */
+#tourBackdrop { position: fixed; inset: 0; z-index: 86; background: rgba(0,0,0,.55); }
+/* ---- F9 元素檢查（2026-10-25）：聚光燈 ＋ id 標籤，點目標複製 id ---- */
+#inspectBackdrop { position: fixed; inset: 0; z-index: 90; background: transparent; }
+#inspectSpot {
+  position: fixed; z-index: 91; pointer-events: none; border-radius: 6px;
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 0 9999px rgba(0,0,0,.45), 0 0 22px rgba(255,212,121,.45);
+}
+#inspectHit { position: fixed; z-index: 92; background: transparent; cursor: pointer; }
+#inspectLabel {
+  position: fixed; z-index: 93; padding: 8px 12px; max-width: min(420px, 90vw);
+  background: var(--popup-bg); color: var(--popup-fg); border: 1px solid var(--accent);
+  border-radius: 8px; box-shadow: 0 14px 40px rgba(0,0,0,.65);
+}
+#inspectLabel b { display: block; color: var(--gold); font-size: 15px; overflow-wrap: anywhere; }
+#inspectLabel span { display: block; color: var(--dim); font-size: 11.5px; margin-top: 2px; }
+
+#tourBackdrop[hidden], #tourBox[hidden] { display: none; }
+#tourBox {
+  position: fixed; z-index: 87; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  width: min(620px, 92vw); max-height: 82vh; overflow: auto;
+  background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 12px; box-shadow: 0 18px 60px rgba(0,0,0,.65); padding: 16px 20px 14px;
+}
+.tourList { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.tourRow { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--panel2); }
+.tourName { font-size: 16px; font-weight: 700; color: var(--link); }
+.tourIntro { font-size: 13px; margin: 4px 0; line-height: 1.65; }
+.tourMeta { font-size: 12px; color: var(--dim); }
+.tourActs { display: flex; gap: 8px; margin-top: 8px; }
+.tourActs button {
+  background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 7px; font: inherit; font-size: 13px; padding: 4px 14px; cursor: pointer;
+}
+.tourActs button:hover { border-color: var(--accent); }
+.tourActs button.primary { background: var(--accent); color: var(--ink-on-accent); border-color: transparent; font-weight: 700; }
+  /* ---- 編輯態（作者 2026-10-24）：CodeMirror、標籤塗紅、修訂 ---- */
+  .editBtn {
+    font-size: 15px; line-height: 1; padding: 2px 7px 3px; color: var(--gold);
+    background: var(--panel); border: 1px solid var(--line); border-radius: 5px; cursor: pointer;
+  }
+  .editBtn:hover { border-color: var(--accent); }
+  /* hidden 屬性要贏過 body.advanced .advOnly 的 display（歷史版本要真的看不到鉛筆） */
+  #editBtn[hidden] { display: none !important; }
+  #readingBtn[hidden] { display: none !important; }
+  /* 精讀中：🙏 要看得出來（作者 2026-11-03） */`n  body.reading #readingBtn { border-color: var(--accent); background: var(--hl-bg); box-shadow: inset 0 0 0 1px var(--accent); color: var(--accent); }`n  .editBtn.on { border-color: var(--accent); background: var(--hl-bg); box-shadow: inset 0 0 0 1px var(--accent); }
+  #docEditor { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+  #docEditor .cmHost { flex: 1 1 auto; min-height: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--bg); }
+  #docEditor .cm-editor { height: 100%; }
+  #docEditor .cm-scroller { overflow: auto; }
+  /* 選取區：深/淺底 + 高對比字；drawSelection 與原生 selection 都蓋 */
+  #docEditor .cm-selectionBackground {
+    background: var(--cm-sel-bg) !important;
+    box-shadow: inset 0 0 0 1px var(--accent);
+    border-radius: 2px;
+  }
+  #docEditor .cm-content ::selection {
+    background: var(--cm-sel-bg);
+    color: var(--cm-sel-fg);
+  }
+  .cm-editor .cm-content { caret-color: var(--caret); }
+  /* drawSelection() 畫的是 .cm-cursor：3px 粗、用與 accent 相反的色 */
+  .cm-editor .cm-cursor, .cm-editor .cm-dropCursor {
+    border-left: 3px solid var(--caret) !important;
+    margin-left: -1px;
+    box-shadow: 0 0 3px var(--caret);
+  }
+  /* 閱讀模式：顯示修訂（作者 2026-10-24） */
+  .diffToggle { font-size: 12.5px; gap: 4px; }
+  .diffToggle[hidden] { display: none; }
+  .diffView {
+    font-family: ui-monospace, Consolas, "Cascadia Mono", monospace;
+    /* 和閱讀模式同一個字級變數（auto-fit 會改 --doc-body-size） */
+    font-size: var(--doc-body-size, var(--fsdoc, 16px)); line-height: 1.65;
+    overflow: auto; min-height: 0; flex: 1 1 auto; padding: 2px 0 30vh;
+  }
+  .diffRow { display: flex; gap: 8px; padding: 0 4px; border-radius: 3px; }
+  .diffNo {
+    width: 4.5em; flex: 0 0 auto; text-align: right; color: var(--dim);
+    font-variant-numeric: tabular-nums; user-select: none;
+  }
+  .diffSign { width: 1.2em; flex: 0 0 auto; text-align: center; user-select: none; }
+  .diffText { flex: 1 1 auto; min-width: 0; white-space: pre-wrap; word-break: break-word; }
+  .diffRow.context .diffText, .diffRow.char .diffText { color: var(--fg); }
+  .diffRow.del .diffText, .diffRow.del .diffSign { color: var(--diff-del); }
+  .diffRow.del .diffText { background: rgba(255,107,107,.10); }
+  .diffRow.ins .diffText, .diffRow.ins .diffSign { color: var(--diff-add); }
+  .diffRow.ins .diffText { background: rgba(80,200,120,.10); }
+  .diff-del-inner { color: var(--diff-del); background: rgba(255,80,80,.28); text-decoration: line-through; }
+  .diff-ins-inner { color: var(--diff-add); background: rgba(80,220,120,.28); }
+  .diffHeaderInfo { color: var(--fg); font-size: 1.06em; font-weight: 600; margin-left: 10px; }
+  .diffLegend { font-size: 12px; color: var(--dim); margin: 0 0 8px 4px; }
+  .diffLegend b { font-weight: 600; }
+  .diffLegend .add { color: var(--diff-add); }
+  .diffLegend .del { color: var(--diff-del); }
+  /* 目錄樹：有未產生修訂的節點，名稱塗紅（作者 2026-10-24） */
+  .tRow.edited .tName { color: var(--hit-2); font-weight: 600; }
+  .cm-tag { color: #ff6b6b; font-weight: 600; }
+  .cm-tag-close { color: #ff8f8f; }
+  .cm-tag-self { color: #ffb15c; }
+  .cm-tag-bad { text-decoration: underline wavy #ff3b30; text-underline-offset: 3px; }
+  .editBar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    font-size: 12.5px; color: var(--dim); flex: 0 0 auto;
+  }
+  .docHeadEditing .dim { display: none !important; }
+  .editBar .mini { font-size: 12px; }
+  .editNotice { color: var(--gold); }
+  .editReadOnly { color: var(--gold); font-weight: 600; }
+  /* 有未產生修訂的分頁：只把字塗紅（和目錄節點一樣），不換背景 */
+  .docTab.dirty { color: var(--hit-2); font-weight: 600; }
+  .docTab.dirty:hover { color: var(--hit-2); }
+  .docTab.dirty.active { color: var(--hit-2); }
+  /* 歷史版本分頁：也只換字色，不換背景 */
+  .docTab.history { color: var(--history-fg); }
+  .docTab.history:hover { color: var(--history-fg); }
+  .docTab.history.active { color: var(--history-fg); }
+  .revisionsTools { display: flex; gap: 6px; margin: 0 0 8px; }
+  .revisionPage { cursor: pointer; border-radius: 4px; padding: 3px 6px; margin-left: -6px; }
+  .revisionPage:hover { background: var(--panel2); }
+  .revisionPage .openHint { color: var(--link); font-size: 11.5px; margin-left: 6px; }
+  .revisionCount { color: var(--warn); font-size: 11.5px; margin-left: 6px; font-variant-numeric: tabular-nums; }
+
+  .dbChipEdit {
+    display: inline-flex; align-items: center; gap: 3px; margin-left: 5px; padding: 0 4px;
+    border-radius: 4px; background: rgba(255,107,107,.16); color: #ffb3b3; font-size: 11.5px;
+    border: 1px solid rgba(255,107,107,.45); cursor: pointer; white-space: nowrap;
+  }
+  .dbChipEdit:hover { background: rgba(255,107,107,.30); color: #fff; }
+  .dbChipEdit svg { width: 12px; height: 12px; fill: currentColor; }
+  .revisionCard {
+    border: 1px solid var(--line); border-radius: 7px; background: var(--panel);
+    padding: 8px 10px; margin-bottom: 8px;
+  }
+  .revisionHead { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .revisionHead b { color: var(--gold); font-size: 13px; }
+  .revisionHead span { color: var(--dim); font-size: 11.5px; }
+  .revisionPage { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-soft); }
+  .revisionPage > b { font-size: 12.5px; color: var(--fg); }
+  .revisionChange { font-size: 12.5px; line-height: 1.7; margin: 2px 0 0 1em; color: var(--dim); }
+  .revisionChange .del { color: #ff8a80; text-decoration: line-through; }
+  .revisionChange .ins { color: var(--ok); }
+  .revisionChange .where { color: var(--link); font-variant-numeric: tabular-nums; }
+  .revisionEmpty { color: var(--dim); padding: 10px; }
+  .editModalBody { min-height: 70px; max-height: 55vh; overflow: auto; font-size: 13px; line-height: 1.7; }
+  .editModalBody .big { font-size: 15px; color: var(--fg); }
+  .editModalBody ul { margin: 6px 0 0; padding-left: 20px; }
+  .editModalBtns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+  #editModalBackdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 80; }
+  #editModalBackdrop[hidden], #editModal[hidden] { display: none; }
+  #editModal {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(580px, 92vw); max-height: 82vh; overflow: auto;
+    background: var(--panel); border: 1px solid var(--accent); border-radius: 9px;
+    padding: 14px 18px 16px; z-index: 81; box-shadow: 0 18px 60px rgba(0,0,0,.55);
+  }
+  #editModal .setHead { margin-bottom: 6px; }
+
+  #editProgress {
+    position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.55);
+  }
+  #editProgress[hidden] { display: none; }
+  .editProgressBox {
+    width: min(460px, 86vw); background: var(--panel); border: 1px solid var(--accent);
+    border-radius: 9px; padding: 18px 20px; box-shadow: 0 12px 40px rgba(0,0,0,.45);
+  }
+  #editProgressText { font-size: 13px; color: var(--fg); margin-bottom: 10px; }
+  .editProgressTrack { height: 6px; background: var(--panel2); border-radius: 999px; overflow: hidden; }
+  #editProgressBar { height: 100%; width: 0; background: var(--accent); transition: width .18s ease; }
+
+  /* ---- 研究用資料庫更新（作者 2026-10-29） ---------------------------------- */
+  /* #dbTabs 裡的按鈕：**有新版才出現**（作者 2026-11-01：沒得更新就不顯示），
+     紅色的 New 是整條 header 最醒目的一點。 */
+  .adbUpBtn {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 999px; padding: 1px 8px 1px 2px; font: inherit; font-size: 12px;
+    line-height: 1.7; cursor: pointer; white-space: nowrap; flex: none;
+  }
+  .adbUpBtn:hover { border-color: var(--accent); color: var(--accent); }
+  .adbUpBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .adbUpNew {
+    background: #d93025; color: #fff; border-radius: 999px; padding: 0 7px;
+    font-size: 10px; font-weight: 700; letter-spacing: .02em; line-height: 16px;
+  }
+  .adbUpCount { color: var(--dim); font-variant-numeric: tabular-nums; }
+  #adbUpdateBackdrop { position: fixed; inset: 0; z-index: 97; background: rgba(0,0,0,.55); }
+  #adbUpdateBackdrop[hidden], #adbUpdateBox[hidden] { display: none; }
+  #adbUpdateBox {
+    position: fixed; z-index: 98; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(760px, 94vw); max-height: 86vh; display: flex; flex-direction: column;
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 12px; box-shadow: 0 20px 70px rgba(0,0,0,.65);
+  }
+  .adbUpTop { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+  .adbUpTop b { font-size: 17px; }
+  .adbUpTop .dim { font-size: 12.5px; }
+  .adbUpTop .err { color: var(--err); }
+  .adbUpDir { padding: 4px 18px 0; font-size: 11.5px; color: var(--dim); word-break: break-all; }
+  .adbUpDir[hidden] { display: none; }
+  .adbUpTop .aboutClose { margin-left: 2px; }
+  #adbUpdateCheck { margin-left: auto; }
+  #adbUpdateList { overflow: auto; flex: 1 1 auto; min-height: 0; padding: 4px 18px 8px; }
+  .adbUpRow { padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .adbUpRow:last-child { border-bottom: 0; }
+  .adbUpHead { display: flex; align-items: baseline; gap: 10px; }
+  .adbUpName { font-size: 14.5px; font-weight: 600; }
+  .adbUpName .file { margin-left: 7px; font: 11px ui-monospace, Consolas, monospace; color: var(--dim); font-weight: 400; }
+  .adbUpDate { margin-left: auto; font-size: 11.5px; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .adbUpMeta { margin: 1px 0 5px; font-size: 12.5px; color: var(--muted2); }
+  .adbUpWip { margin: 3px 0 7px; padding: 6px 10px; border-left: 3px solid var(--gold);
+    background: var(--panel2); border-radius: 4px; color: var(--muted2); font-size: 12.5px; }
+  .adbUpMeta b { color: var(--fg); }
+  .adbUpArrow { color: var(--dim); margin: 0 2px; }
+  .adbUpDoc { color: var(--accent); }
+  .adbUpNotes { margin: 4px 0 5px; padding-left: 20px; font-size: 13px; line-height: 1.65; color: var(--muted); }
+  .adbUpNotes li { margin: 1px 0; }
+  .adbUpNoNotes { margin: 2px 0 5px; font-size: 12px; color: var(--dim); }
+  .adbUpMsg { margin: 4px 0; font-size: 12.5px; color: var(--dim); }
+  .adbUpMsg.err { color: var(--err); }
+  .adbUpMsg.ok { color: #2e8b57; }
+  .adbUpAct { display: flex; justify-content: flex-end; }
+  /* 取得更多 ADB（2026-10-29） */
+  #adbStoreBackdrop { position: fixed; inset: 0; z-index: 97; background: rgba(0,0,0,.55); }
+  #adbStoreBackdrop[hidden], #adbStoreBox[hidden] { display: none; }
+  #adbStoreBox {
+    position: fixed; z-index: 98; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(860px, 95vw); max-height: 86vh; display: flex; flex-direction: column;
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 12px; box-shadow: 0 20px 70px rgba(0,0,0,.65);
+  }
+  #adbStoreList { overflow: auto; flex: 1 1 auto; min-height: 0; padding: 4px 18px 8px; }
+  .adbStoreTable { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .adbStoreTable th { text-align: left; color: var(--dim); font-weight: 500; font-size: 11.5px; padding: 8px 8px 6px; border-bottom: 1px solid var(--line); }
+  .adbStoreRow td { padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .adbStoreFile { font: 11px ui-monospace, Consolas, monospace; color: var(--dim); }
+  .adbStoreSize, .adbStoreDate { white-space: nowrap; color: var(--muted2); font-variant-numeric: tabular-nums; }
+  .adbStoreAct { text-align: right; white-space: nowrap; }
+  .adbStoreInstalled { color: #2e8b57; font-size: 12px; }
+  .adbStorePct { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .adbStoreNote { margin-top: 2px; font-size: 11.5px; color: var(--dim); }
+  .adbStoreErr { margin-top: 2px; font-size: 11.5px; color: var(--err); }
+  .adbStoreProg { height: 3px; margin-top: 5px; background: var(--line); border-radius: 2px; overflow: hidden; }
+  .adbStoreProg i { display: block; height: 100%; background: var(--accent); }
+  /* 注疏索引（study block）：清單而不是樹 */
+  #studyIndexBackdrop { position: fixed; inset: 0; z-index: 97; background: rgba(0,0,0,.55); }
+  #studyIndexBackdrop[hidden], #studyIndexBox[hidden] { display: none; }
+  #studyIndexBox {
+    position: fixed; z-index: 98; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(940px, 96vw); max-height: 88vh; display: flex; flex-direction: column;
+    background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 12px; box-shadow: 0 20px 70px rgba(0,0,0,.65);
+  }
+  #studyIndexFilter {
+    margin-left: auto; width: min(260px, 38vw); background: var(--panel2); color: var(--fg);
+    border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; font: inherit; font-size: 13px;
+  }
+  #studyIndexList { overflow: auto; flex: 1 1 auto; min-height: 0; padding: 2px 18px 12px; }
+  .studyIdxBook { margin: 15px 0 4px; font-size: 15px; font-weight: 700; color: var(--gold); }
+  .studyIdxChapter { margin: 13px 0 5px; font-size: 13px; font-weight: 600; color: var(--accent); }
+  .studyIdxRow { padding: 8px 0 10px; border-bottom: 1px solid var(--line); }
+  .studyIdxQuote { font-size: 13.5px; line-height: 1.55; color: var(--fg); }
+  .studyIdxPage { font: 11px ui-monospace, Consolas, monospace; color: var(--dim); margin-right: 7px; }
+  .studyIdxTargets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .studyIdxTargets button {
+    border: 1px solid var(--line); background: var(--panel2); color: var(--accent);
+    border-radius: 999px; padding: 2px 10px; font: inherit; font-size: 12px; cursor: pointer;
+  }
+  .studyIdxTargets button:hover { border-color: var(--accent); background: var(--hl-bg); }
+  .studyIdxJump { color: var(--gold) !important; }
+  .studyIdxEmpty { color: var(--dim); padding: 24px 4px; }
+  .adbUpProg { margin: 6px 0 2px; }
+  .adbUpTrack { height: 8px; border-radius: 999px; background: var(--panel2); overflow: hidden; }
+  .adbUpTrack i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .15s linear; }
+  .adbUpNums { display: flex; align-items: center; gap: 10px; margin-top: 4px; font-size: 11.5px; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .adbUpNums .speed { margin-left: auto; }
+  .adbUpNums .eta { white-space: nowrap; }
+  .adbUpNums .adbUpCancel { margin-left: 4px; }
+  /* 兩個頁籤：可更新／版本記錄（作者 2026-10-29） */
+  .adbUpTabs { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .adbUpTabs button {
+    background: transparent; color: var(--dim); border: 0; border-right: 1px solid var(--line);
+    font: inherit; font-size: 11.5px; padding: 2px 9px; cursor: pointer; white-space: nowrap;
+  }
+  .adbUpTabs button:last-child { border-right: 0; }
+  .adbUpTabs button:hover { color: var(--fg); }
+  .adbUpTabs button.active { background: var(--accent); color: var(--btn-fg, #fff); font-weight: 700; }
+  .adbUpTabs b { font-variant-numeric: tabular-nums; }
+  /* 從本機版本到最新版之間的每一版 */
+  .adbUpChanges { margin: 5px 0 6px; }
+  .adbUpVer { margin: 5px 0 8px; }
+  .adbUpVer .vdate {
+    display: block; font-size: 11px; color: var(--gold, #c9a227);
+    font-variant-numeric: tabular-nums; margin-bottom: 2px;
+  }
+  .adbUpVer .adbUpNotes { margin: 0; }
+  .adbUpMeta b { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .adbUpDetails { margin-top: 5px; }
+  .adbUpDetails summary { cursor: pointer; font-size: 11.5px; color: var(--dim); }
+  .adbUpDetails summary:hover { color: var(--fg); }
+  .adbUpDetails[open] summary { color: var(--fg); }
+  .adbUpHistList { margin: 6px 0 0; padding-left: 20px; font-size: 12px; color: var(--muted2); }
+  .adbUpHistList > li { margin: 0 0 8px; }
+  .adbUpHistDate { font-family: ui-monospace, Consolas, monospace; color: var(--gold, #c9a227); font-size: 11px; }
+  .adbUpHistTag {
+    display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px;
+    border: 1px solid var(--line); font-size: 10px; color: var(--dim);
+  }
+  .adbUpHistTag.cur { color: var(--accent); border-color: var(--accent); }
+  .adbUpHistNotes { margin: 2px 0 0; padding-left: 16px; line-height: 1.6; }
+  .adbUpFoot { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-top: 1px solid var(--line); }
+  .adbUpFoot .dim { flex: 1 1 auto; min-width: 0; font-size: 12px; }
+  .adbUpFoot .mini.primary { background: var(--accent); color: var(--btn-fg, #fff); border-color: var(--accent); font-weight: 700; }
+  .adbUpFoot .mini:disabled { opacity: .45; cursor: default; }
+
+  /* 精讀模式（作者 2026-11-03）：toolbar ＋ 左 70% 精讀頁（CM6）＋ 右 30% 側欄。
+     ruby 在字的上方，字級 75–80%，行距要放大（不然 ruby 會壓到下一行）。 */
+  #readingMode { position: fixed; inset: 0; z-index: 78; display: flex; flex-direction: column; background: var(--bg); color: var(--fg); }
+  #readingMode[hidden] { display: none !important; }
+  .rdBar { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .rdBar .rdTitle { font-weight: 700; }
+  .rdBar .rdWhere { color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 32vw; }
+  .rdBar .rdLang, .rdBar .rdToggle { color: var(--dim); display: inline-flex; align-items: center; gap: 4px; }
+  .rdBar select { font: inherit; font-size: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 1px 4px; }
+  .rdBar .rdHint { margin-left: auto; color: var(--dim); font-size: 11px; }
+  .rdBar .rdClose { background: transparent; color: var(--dim); border: 1px solid var(--line); border-radius: 5px; font: inherit; font-size: 16px; line-height: 1; padding: 1px 8px; cursor: pointer; }
+  .rdBar .rdClose:hover { color: var(--fg); border-color: var(--accent); }
+  .rdBody { flex: 1 1 auto; display: flex; min-height: 0; }
+  .rdPage { flex: 0 0 70%; min-width: 0; overflow: auto; padding: 16px 28px 60px; }
+  .rdSide { flex: 1 1 auto; min-width: 0; overflow: auto; padding: 14px 16px; border-left: 1px solid var(--line); font-size: 13px; line-height: 1.8; }
+  .rdSideWord { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .rdSideRuby { color: var(--accent); }
+  .rdSideMeta { color: var(--dim); font-size: 12px; }
+  .rdEmpty { color: var(--dim); font-size: 12px; }
+  /* lex 當右欄頁籤（作者 2026-11-03）：不再 fixed、不再浮動 */
+  .tabPane[data-tab="lex"] { flex-direction: column; min-height: 0; }
+  #lexInTab { flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; flex-direction: column; }
+  .lexPane.inTab { position: static; inset: auto; width: auto; max-width: none; height: auto; border: 0; box-shadow: none; background: transparent; display: flex; flex-direction: column; min-height: 0; }
+  .lexPane.inTab .lexPaneBody { flex: 1 1 auto; min-height: 0; }
+  .rdSideRow { margin: 6px 0; }
+  .rdSideRow b { display: inline-block; min-width: 3.2em; color: var(--dim); font-weight: 400; font-size: 12px; }
+  /* CM6：字體跟著內文、行距放大給 ruby */
+  .rdPage .cm-editor { background: transparent; color: var(--fg); height: 100%; }
+  .rdPage .cm-editor.cm-focused { outline: none; }
+  .rdPage .cm-scroller { font-family: var(--doc-font, inherit); font-size: 16px; }
+  .rdPage .cm-content { font-family: var(--doc-font, inherit); line-height: 2.9; padding: 0; }
+  .rdPage .cm-line { padding: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+  /* 精讀：正文區的 CM6 也要軟換行（作者 2026-11-03） */
+  #docText .cm-line { white-space: pre-wrap !important; overflow-wrap: anywhere; }
+  /* 精讀：ruby 在字上方、字級 75–80%（作者 2026-11-03） */
+  #docText .cm-content { line-height: 2.8; }
+  #docText ruby.rdRuby rt { font-size: 76%; color: var(--accent); }
+  #docText ruby.rdRuby { cursor: pointer; }
+  #docText ruby.rdRuby:hover { background: var(--hl-bg); }
+  .rdToolbar { display: flex; gap: 10px; align-items: center; padding: 2px 10px; font-size: 12px; color: var(--dim); border-bottom: 1px solid var(--line); }
+  .rdToolbar[hidden] { display: none !important; }
+  .rdToolbar b { color: var(--fg); }
+  #docText .cm-scroller { overflow-x: hidden; }
+  .rdPage .cm-content { white-space: pre-wrap !important; }
+  /* 真 ruby：注音在字的上方 */
+  .rdPage ruby.rdRuby { ruby-position: over; -webkit-ruby-position: before; cursor: pointer; }
+  .rdPage ruby.rdRuby rt { font-size: 76%; color: var(--accent); opacity: .9; font-family: inherit; }
+  .rdPage ruby.rdRuby:hover { background: var(--hl-bg); }
+
+</style>
+</head>
+<body>
+<header id="header">
+  <!-- 左上角：桌面版會在這裡顯示建置時間（hover hint），有新版本時閃動並可點擊更新 -->
+  <h1 id="brand" title="關於 Accelon26（Alt+A）">Accelon<span class="accent">26</span></h1>
+  <button class="sideToggle" id="toggleLeft" aria-keyshortcuts="Control+B" title="顯示／隱藏左欄（Ctrl+B；Mac ⌘B）">◧</button>
+  <button class="sideToggle" id="toggleRight" aria-keyshortcuts="Control+Alt+B" title="顯示／隱藏右欄（Ctrl+Alt+B；Mac ⌘⌥B）">◨</button>
+  <!-- adb 選單（作者 2026-10）：原本的 ＋ 按鈕收進下拉的第一項「加入 adb」 -->
+  <span class="dbPickWrap">
+    <button type="button" class="dbPickBtn" id="dbPickBtn" title="adb：按一下選一個（最多同時 5 個）（Alt+O）">📁</button>
+    <div class="dbPickMenu" id="dbPickMenu" hidden></div>
+  </span>
+  <input type="file" id="file" accept=".adb" multiple>
+  <!-- 「加入 Obsidian」（作者 2026-10-25）：資料夾用 webkitdirectory，.zip 用一般檔案選擇。
+       兩者都由 vault-import.ts 接線，選完就轉成 .adb。 -->
+  <input type="file" id="vaultDir" webkitdirectory multiple hidden>
+  <input type="file" id="vaultZip" accept=".zip,application/zip" hidden>
+  <button class="dbAdd dbAll" id="searchAllBtn" title="搜尋所有 adb（Alt+S）：輪流查每一個庫的命中數，再決定要不要打開">🔍</button>
+  <button class="dbAdd" id="studyIndexBtn" hidden title="注疏索引：經文 → 注疏名稱 → 大正頁">注疏</button>
+  <button type="button" class="dbHint" id="dbHint">← 按 📁 下載或開啟資料庫</button>
+  <span class="dbTabs" id="dbTabs"></span>
+  <span class="status" id="status"></span>
+  <!-- 設置（齒輪）在最右邊：作者 2026-10 把它移到原本資料夾按鈕的位置。
+       操作導覽的入口不在頂欄（作者 2026-10-18：移到「關於」裡）。 -->
+  <button class="sideToggle" id="settingsBtn" title="設置（進階模式、繁簡通檢、文字顯示）">🔧</button>
+</header>
+
+<main id="main">
+  <!-- 左：每個 <樹 s="…"> 一頁（目錄／名詞／全文．頻次／原書分頁／西文） -->
+  <section class="col" id="colLeft">
+    <div class="tabs" id="tabsLeft">
+      <button class="tabBtn active" data-tab="terms" hidden>名詞</button>
+      <button class="tabBtn" data-tab="dir">目錄</button>
+      <button class="tabBtn" data-tab="bookmark">書籤</button>
+      <button class="tabBtn" data-tab="freq" hidden>頻次</button>
+      <button class="tabBtn" data-tab="folio" hidden>原書分頁</button>
+      <button class="tabBtn" data-tab="map" hidden>對照</button>
+      <button class="tabBtn" data-tab="jump" hidden>跳至</button>
+      <button class="tabBtn" data-tab="latin" hidden>西文</button>
+      <button class="tabBtn" data-tab="glossary" hidden>詞彙</button>
+      <button class="tabBtn advOnly" data-tab="token">token</button>
+      <!-- 左欄字級：黑底白字的「小 T / 大 T」，點一下 +2px、Alt+點 −2px（作者 2026-10） -->
+      <button type="button" class="fsPick iconOnly fsStep" id="fsLeftPick" data-fs="left" title="左欄字級">
+        <span class="fsT" aria-hidden="true"><b>T</b><b>T</b></span>
+      </button>
+      <!-- 展開樹：從 docBar 搬到左欄字級右邊（作者 2026-10-31） -->
+      <button class="mini" id="treeReveal" title="展開樹：展開目錄樹並捲到目前捲動位置對應的節點">🌲</button>
+    </div>
+    <div class="pane grow tabs-host" id="paneLeft">
+      <div class="tabPane active" data-tab="dir">
+        <div class="searchBar">
+          <input type="search" id="query" placeholder="輸入詞，或 #行號後按 Enter（例：#123）" title="輸入詞會邊打邊查；#行號（可加 @db）按 Enter 跳到那一行" autocomplete="off" spellcheck="false">
+          <span class="queryMode" id="queryMode" hidden></span>
+          <button type="button" id="savedOpen" title="已存輸入：位置／此庫／全域（也可在輸入框空白時等待提示卡）">☆</button>
+        </div>
+        <div id="dirMeta" class="note"></div>
+        <!-- 同一個庫宣告了兩棵 s="*" 樹（taisho：經目／分卷）時才出現 -->
+        <div class="note" id="dirPickWrap" hidden><select id="dirPick" class="modeSel" title="這個庫宣告了多棵目錄樹"></select></div>
+        <!-- 融視圖開關（R1 V6）：本庫無 <融> 時 initFusion/ui 會把 #fusionWrap 設 hidden -->
+        <label id="fusionWrap" class="fusionToggle" hidden title="把 <融> 佔位以目標科文子樹重排顯示（本庫無可融合節點時不出現）"><input type="checkbox" id="fusionOn"> 以科文融合顯示</label>
+        <div id="dirTree" class="scrollArea"><p class="dim">尚未開啟資料庫。</p></div>
+      </div>
+      <!-- 書籤（2026-10-28）：所有 adb 都有；存在這個瀏覽器 -->
+      <div class="tabPane" data-tab="bookmark">
+        <div id="bookmarkMeta" class="note"></div>
+        <div id="bookmarkList" class="scrollArea"></div>
+      </div>
+      <!-- 名詞：s="$詞"（tag 包裹）。詞條＝<詞> 的實例，字典式查詢。 -->
+      <div class="tabPane" data-tab="terms">
+        <div class="searchBar">
+          <input type="search" id="termsQuery" placeholder="輸入詞條（比對 &lt;詞&gt; 包住的字；. ＝ 任一個字）" title="只有一筆時直接開新分頁；按 Enter 開清單第一條" autocomplete="off" spellcheck="false">
+          <!-- 三態 toggle（作者 2026-10）：按一下換下一個模式，不用下拉。
+               作者 2026-10-18：符合的詞條數直接放進這顆按鈕裡（只放數字）。 -->
+          <button type="button" id="termsMode" class="modeBtn" data-mode="start" title="比對位置：按一下切換 開頭 → 中間 → 結尾"><span id="termsModeName">開頭</span><span id="termsCount" class="modeCount"></span></button>
+          <button id="termsClear" title="清除">✕</button>
+        </div>
+        <div id="termsMeta" class="note"></div>
+        <div id="termsList" class="scrollArea"></div>
+      </div>
+      <div class="tabPane" data-tab="freq">
+        <div class="searchBar">
+          <input type="search" id="freqQuery" placeholder="輸入詞（分段命中統計）" autocomplete="off" spellcheck="false">
+        </div>
+        <div id="freqMeta" class="note"></div>
+        <!-- 同一個庫宣告了兩棵 *… 樹（taisho：分書頻次／分卷頻次）時才出現 -->
+        <div class="note" id="freqPickWrap" hidden><select id="freqPick" class="modeSel" title="這個庫宣告了多棵分段樹"></select></div>
+        <div id="freqList" class="scrollArea"></div>
+      </div>
+      <!-- 原書分頁：s="頁.n"（tag.attr）。列出 <頁> 的 n 值，可直接選或輸入頁碼跳到原書 folio。 -->
+      <div class="tabPane" data-tab="folio">
+        <div class="searchBar">
+          <input type="search" id="folioQuery" placeholder="輸入原書頁碼（例：1、25）或標籤" autocomplete="off" spellcheck="false">
+          <button id="folioClear" title="清除">✕</button>
+        </div>
+        <div id="folioMeta" class="note"></div>
+        <div id="folioList" class="scrollArea"></div>
+      </div>
+      <!-- 對照：goryeo_taisho.adb 的 `<樹 m="taisho">`。輸入經名／經號／位置，
+           清單一經一筆，右邊那顆就是要去的那一藏（2026-10-30 改版）。 -->
+      <div class="tabPane" data-tab="map">
+        <div class="searchBar">
+          <input type="search" id="mapQuery" placeholder="經名、經號（1、T1.2）或位置（T05p0002c0405）" title="輸入經名找經；輸入數字找經號（大正、高麗一起找）；T／K 前綴只找那一藏；T1.2 = 第 1 經第 2 卷；也可以貼位置或字元級位置。" autocomplete="off" spellcheck="false">
+          <button id="mapClear" title="清除">✕</button>
+        </div>
+        <div id="mapList" class="scrollArea"></div>
+      </div>
+      <!-- 跳至：任何有 <頁> 標記的庫都能用（不必宣告 `s="頁.n"` 樹）。
+           輸入頁 id 的一部份（例：49p15、0065a）就列出符合的頁；按 Enter 直接跳到最接近的一頁。 -->
+      <div class="tabPane" data-tab="jump">
+        <div class="searchBar">
+          <input type="search" id="jumpQuery" placeholder="輸入頁 id（49p15）或字元級位置（yl38p4#12-34）後按 Enter" title="依 <頁 id> 跳到那一頁；貼上選取選單「引用複製」的字串，會跳到那一段並高亮。Enter 直接跳。" autocomplete="off" spellcheck="false">
+          <button id="jumpClear" title="清除">✕</button>
+        </div>
+        <div id="jumpMeta" class="note"></div>
+        <div id="jumpList" class="scrollArea"></div>
+      </div>
+      <div class="tabPane" data-tab="latin">
+        <div class="searchBar">
+          <input type="search" id="latinQuery" placeholder="輸入詞（限西文）" autocomplete="off" spellcheck="false">
+          <select id="latinMode" class="modeSel" title="比對位置：開頭＝^、結尾＝$、中間＝兩者都不是">
+            <option value="any">任意</option>
+            <option value="start">開頭</option>
+            <option value="mid">中間</option>
+            <option value="end">結尾</option>
+          </select>
+          <button id="latinClear" title="清除">✕</button>
+        </div>
+        <div id="latinMeta" class="note"></div>
+        <div id="latinList" class="scrollArea"></div>
+      </div>
+      <div class="tabPane" data-tab="glossary">
+        <div class="searchBar">
+          <input type="search" id="glossaryQuery" placeholder="漢詞或外語（外語可省略變音符號）" autocomplete="off" spellcheck="false">
+          <select id="glossaryMode" class="modeSel" title="排序：漢語＝依漢詞，外語＝依外語；輸入兩種都可以"><option value="han">漢語</option><option value="foreign">外語</option></select>
+          <select id="glossaryMatch" class="modeSel" title="比對位置：任意／開頭／中間／結尾（漢語、外語通用）"><option value="any">任意</option><option value="start">開頭</option><option value="mid">中間</option><option value="end">結尾</option></select>
+          <button id="glossaryClear" title="清除">✕</button>
+        </div>
+        <div id="glossaryMeta" class="note"></div>
+        <div id="glossaryList" class="scrollArea"></div>
+      </div>
+      <div class="tabPane" data-tab="token">
+        <div id="tokenSummary"></div>
+        <div id="tokenClasses"></div>
+        <div class="dim" id="tokenTitle">尚未載入</div>
+        <div class="note" id="tokenMore"></div>
+        <div id="tokenRows"></div>
+      </div>
+    </div>
+  </section>
+  <div class="splitter" id="splitLeft" title="拖曳調整左欄寬度（拖到 15% 以下即隱藏）"></div>
+
+  <!-- 中：文件文字（硬分行；命中直接塗紅） ------------------------------------>
+  <section class="col" id="colMid">
+    <div class="pane grow">
+      <!-- docBar 取消（作者 2026-10-31）：標題不再顯示、展開樹搬到左欄、
+           原書分行搬到設置頁；字級與編輯／修訂鈕移到 docTabs 最右邊，閱讀區最大化。 -->
+      <div class="docTabs" id="docTabs" hidden>
+        <div class="docTabStrip" id="docTabStrip"></div>
+        <button class="mini" id="docTabAdd" title="新分頁（Ctrl+點任何聯動處也可以）">＋</button>
+        <span class="docTabTools">
+          <button type="button" class="mini editBtn" id="readingBtn" hidden title="精讀模式（ruby 注音；F4）" aria-label="精讀模式">🙏</button>
+          <button type="button" class="mini editBtn advOnly" id="editBtn" title="編輯這一頁（修錯字；離開會自動暫存）" aria-label="編輯這一頁">✎</button>
+          <label class="fsPick diffToggle" id="diffToggle" hidden title="顯示這一頁的修訂：新增綠、刪除紅；不回讀搜尋關鍵字"><input type="checkbox" id="showDiff"> 顯示修訂</label>
+          <button type="button" class="fsPick iconOnly fsStep" id="fsBodyPick" data-fs="body" title="正文字級（中間的本文）">
+            <span class="fsT" aria-hidden="true"><b>T</b><b>T</b></span>
+          </button>
+        </span>
+      </div>
+      <div class="docLogoArea" id="docLogo" hidden><img id="docLogoImg" alt=""></div>
+      <div id="docText"><p class="dim">點左側 token，會自動跳到該 token 在文中的位置並只塗紅它。</p></div>
+      <div class="docPager" id="docPager" hidden>
+        <button class="mini" id="pagePrev" title="上一頁（Alt+←；網頁分頁，不是原書的葉）"><span class="pgArrow">◀</span><span class="pgLabel">上一頁</span></button>
+        <span class="pagerInfo" id="pageInfo"></span>
+        <button class="mini" id="pageNext" title="下一頁（Alt+→；網頁分頁，不是原書的葉）"><span class="pgLabel">下一頁</span><span class="pgArrow">▶</span></button>
+        <button class="mini" id="pageMore" hidden title="整本連續閱讀：每頁 200 行，頁尾補到段落結束，方便跨小條目選取／複製">連續閱讀</button>
+      </div>
+    </div>
+  </section>
+  <div class="splitter" id="splitRight" title="拖曳調整右欄寬度（拖到 15% 以下即隱藏）"></div>
+
+  <!-- 右：摘要 ＋ META / 容量 / 文件 / 圖片（後四者在進階模式才顯示） ------------>
+  <section class="col" id="colRight">
+    <div class="tabs" id="tabsRight">
+      <button class="tabBtn active" data-tab="sum">摘要</button>
+      <button class="tabBtn" data-tab="text" hidden>引文</button>
+      <button class="tabBtn advOnly" data-tab="heat" hidden>引紋</button>
+      <button class="tabBtn" data-tab="dict">詞典</button>
+      <button class="tabBtn" data-tab="lex">詞</button>
+      <button class="tabBtn advOnly" data-tab="header" id="tabHeader" hidden>檔頭</button>
+      <button class="tabBtn advOnly" data-tab="meta">META</button>
+      <button class="tabBtn advOnly" data-tab="capacity">容量</button>
+      <button class="tabBtn advOnly" data-tab="docs">文件</button>
+      <button class="tabBtn advOnly" data-tab="images">圖片</button>
+      <button class="tabBtn advOnly" data-tab="revisions">修訂</button>
+      <!-- 右欄字級：黑底白字的「小 T / 大 T」 -->
+      <button type="button" class="fsPick iconOnly fsStep" id="fsRightPick" data-fs="right" title="右欄字級">
+        <span class="fsT" aria-hidden="true"><b>T</b><b>T</b></span>
+      </button>
+    </div>
+    <div class="pane grow tabs-host" id="paneRight">
+      <div class="tabPane" data-tab="text">
+        <div class="textTabs" id="textTabs"></div>
+        <div id="textBody" class="scrollArea"></div>
+        <div class="docPager" id="textPager" hidden>
+          <button class="mini" id="textPrev" title="上一頁（網頁分頁）"><span class="pgArrow">◀</span><span class="pgLabel">上一頁</span></button>
+          <span class="pagerInfo" id="textPageInfo"></span>
+          <button class="mini" id="textNext" title="下一頁（網頁分頁）"><span class="pgLabel">下一頁</span><span class="pgArrow">▶</span></button>
+        </div>
+      </div>
+      <div class="tabPane active" data-tab="sum">
+        <div id="searchMeta" class="note"></div>
+        <div id="searchList" class="scrollArea"></div>
+        <div id="searchMore" class="note"></div>
+      </div>
+      <!-- 引紋（2026-10-28）：反鏈的引用分布熱圖；不必先開跨庫頁面 -->
+      <div class="tabPane" data-tab="heat">
+        <div class="heatToolbar">
+          <select id="heatHost" title="被引用的庫（左）"></select>
+          <span class="heatArrow" title="右邊的庫引用左邊的庫">←</span>
+          <select id="heatSource" title="引用別人的庫（右）"></select>
+          <span class="heatSeg" id="heatGrain" role="group" aria-label="目標粒度">
+            <button type="button" data-grain="volume" title="依大正部（冊）">部</button>
+            <button type="button" data-grain="sutra" title="依經（書）">經</button>
+            <button type="button" data-grain="juan" title="依卷">卷</button>
+          </span>
+          <span class="heatSeg" id="heatNorm" role="group" aria-label="數值">
+            <button type="button" data-norm="count" title="原始 <聯> 條數">計數</button>
+            <button type="button" data-norm="row" title="同一列加總為 100%：看這部大正部/經/卷的引用來自哪些來源書">列佔比</button>
+            <button type="button" data-norm="col" title="同一欄加總為 100%：看這部來源書的引用分佈在大正哪些部/經/卷">欄佔比</button>
+          </span>
+          <span id="heatStats" class="dim heatStats"></span>
+          <button type="button" class="mini" id="heatFullBtn" title="展開完整熱圖（預設只顯示縮圖）">完整熱圖</button>
+        </div>
+        <div id="heatHelp" class="heatHelp dim"></div>
+        <div id="heatBody" class="heatBody"><p class="dim">同時開啟來源庫（ys/tx/lc/yulinpo）與目標庫（taisho），這裡會出現引用分布。</p></div>
+      </div>
+      <!-- 詞典（作者 2026-10）：上半詞條清單、下半詞條正文 -->
+      <div class="tabPane" data-tab="dict">
+        <div id="dictList" class="dictList"></div>
+        <div id="dictBody" class="scrollArea dictBody">
+          <div class="note">在中間本文點一個詞（例：比丘尼戒），這裡會列出詞條；點詞條看正文。</div>
+        </div>
+      </div>
+      <!-- 詞卡（lex-pane，2026-11-03）：單擊 cs 的 <詞> 或精讀 ruby 會切到這一頁。
+           內容由 lex-pane.ts 自己掛進來（#lexInTab 只是容器）。 -->
+      <div class="tabPane" data-tab="lex">
+        <div id="lexInTab" class="scrollArea">
+          <div class="lexNote" style="padding:12px">在 cs 正文點一個詞（或精讀模式的 ruby），這裡會顯示詞形、詞譜與詞條。</div>
+        </div>
+      </div>
+      <!-- 檔頭（作者 2026-10）：開頭第一個 source 區塊 —— <集>／<樹>／<英文名> 這些
+           重要設定都在裡面。沒有 <檔> 也沒有圖片的庫看不到這個分頁（那種庫第一塊就是正文）。 -->
+      <div class="tabPane" data-tab="header"><div id="headerText" class="scrollArea"></div></div>
+      <div class="tabPane" data-tab="meta">
+        <div id="meta" class="scrollArea"><p class="dim">尚未開啟資料庫。</p></div>
+      </div>
+      <div class="tabPane" data-tab="capacity">
+        <div id="capacity" class="scrollArea"><p class="dim">尚未開啟資料庫。</p></div>
+        <!-- 導出（作者 2026-10）：文字 ＋ 圖片打包成 zip 存到「下載」資料夾。
+             只有桌面版有（file:// 版寫不了本機資料夾），所以預設藏起來由 JS 打開。 -->
+        <div class="exportBox" id="exportBox" hidden>
+          <button type="button" class="mini" id="exportZip" title="把這個庫的文字與圖片打包成 zip，存到「下載」資料夾">導出文字與圖片</button>
+          <span class="note" id="exportMsg"></span>
+        </div>
+      </div>
+      <div class="tabPane" data-tab="docs"><div id="docs" class="scrollArea"></div></div>
+      <div class="tabPane" data-tab="images"><div id="resources" class="scrollArea"></div></div>
+      <div class="tabPane" data-tab="revisions"><div id="revisionsPane" class="scrollArea"></div></div>
+    </div>
+  </section>
+</main>
+
+<!-- 搜尋所有 adb（作者 2026-10）：
+     三種模式（作者 2026-11-01）：索引（原本的逐庫索引查詢）／單庫萬用／全庫萬用。
+     萬用字元是「掃描」：先用 pattern 裡的漢字查索引縮小要掃的段落，再做逐段比對，
+     所以有進度、剩餘量與隨時中斷。 -->
+<div id="allSearchBackdrop" hidden></div>
+<div id="allSearchBox" role="dialog" aria-modal="true" aria-labelledby="allSearchTitle" hidden>
+  <div class="setHead">
+    <h2 id="allSearchTitle">搜尋所有 adb</h2>
+    <button id="allSearchClose" class="aboutClose" title="關閉（Esc）">✕</button>
+  </div>
+  <div class="allSearchModes" id="allSearchMode" role="group" aria-label="搜尋模式">
+    <button type="button" data-mode="index" class="on" title="用每個庫的 token 索引查（精確、最快）">索引</button>
+    <button type="button" data-mode="single" title="萬用字元：只掃目前打開的這個庫（可以用進度、可中斷）">單庫萬用</button>
+    <button type="button" data-mode="all" title="萬用字元：掃清單上的每一庫（慢，可看進度、可中斷）">全庫萬用</button>
+  </div>
+  <div class="allSearchBar">
+    <input type="search" id="allSearchQuery" placeholder="查詢詞（例：比丘、緣起 性空）" autocomplete="off" spellcheck="false">
+    <button id="allSearchGo">搜尋全部</button>
+    <button id="allSearchStop" type="button" hidden title="立刻中斷掃描">中斷</button>
+  </div>
+  <div id="allSearchHint" class="note" hidden></div>
+  <div id="allSearchProg" hidden>
+    <div class="allSearchTrack"><div id="allSearchBarFill"></div></div>
+    <div id="allSearchProgText" class="note"></div>
+  </div>
+  <div id="allSearchMsg" class="note"></div>
+  <div id="allSearchForms" class="allSearchForms"></div>
+  <div id="allSearchList" class="allSearchList"></div>
+</div>
+
+<!-- 設置（齒輪；作者 2026-10）：分頁：介面（主題／更新）／閱讀／進階／辭典順序／標籤樣式／繁簡／悉曇 -->
+<div id="settingsBackdrop" hidden></div>
+<div id="settingsBox" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" hidden>
+  <div class="setHead">
+    <h2 id="settingsTitle">設置</h2>
+    <button id="settingsClose" class="aboutClose" title="關閉（Esc）">✕</button>
+  </div>
+  <div class="setTabs" id="setTabs" role="tablist">
+    <button class="setTab active" data-setpane="ui" role="tab">介面</button>
+    <button class="setTab" data-setpane="read" role="tab">閱讀</button>
+    <button class="setTab" data-setpane="advanced" role="tab">進階</button>
+    <button class="setTab" data-setpane="dict" role="tab">辭典順序</button>
+    <button class="setTab" data-setpane="tags" role="tab">標籤樣式</button>
+    <button class="setTab" data-setpane="sim" role="tab">繁簡</button>
+    <button class="setTab" data-setpane="sanskrit" role="tab">悉曇</button>
+  </div>
+  <div class="setBody" id="setBody">
+    <!-- ---- 標籤樣式（作者 2026-10-22） ---- -->
+    <div class="setPane" data-setpane="tags" hidden>
+      <div class="tagScopeBar">
+        <span class="seg" id="tagScopeSeg" role="group" aria-label="作用範圍">
+          <button type="button" data-tag-scope="global">全域預設</button>
+          <button type="button" data-tag-scope="adb" class="active">此資料庫</button>
+        </span>
+        <span class="tagScopeNow" id="tagScopeNow"></span>
+        <span class="grow"></span>
+        <span class="setHint" id="tagScopePath"></span>
+      </div>
+      <div class="tagBanner" id="tagBanner"></div>
+      <div class="tagSectionHead"><b>標籤樣式</b><span>最上面一列是本文（pt）；標籤的自動＝顏色跟著標籤（主題 8 色相）、字級跟著層次（以本文為基準）；天干地支是同一個設定（22 層，色相每層 +30°，只示範甲）</span></div>
+      <div class="tagScroll"><div class="tagTable" id="tagTable"></div></div>
+      <p class="setHint" id="tagFontSource"></p>
+      <div class="tagStore" id="tagStore">
+        <div class="tagStoreRow">
+          <b>設定檔</b><span class="vchip" id="tagStoreVersion">v1</span><code id="tagStorePath">—</code><span id="tagStoreBadge"></span>
+        </div>
+        <div class="tagStoreRow"><span class="setHint" id="tagStoreNote"></span></div>
+        <div class="tagStoreRow">
+          <b>分享</b>
+          <button class="setBtn" id="tagExport" type="button">匯出 JSON</button>
+          <button class="setBtn" id="tagImport" type="button">匯入…</button>
+          <input type="file" id="tagImportFile" accept="application/json,.json" hidden>
+          <button class="setBtn" id="tagReveal" type="button" hidden>開啟資料夾</button>
+          <span class="setHint" id="tagStoreStatus"></span>
+        </div>
+      </div>
+    </div>
+    <!-- ---- 閱讀（2026-11-01）：原書分行／原書頁碼／術語顯示／頁位置 ---- -->
+    <div class="setPane" data-setpane="read" hidden>
+      <section class="setSection">
+        <h3>閱讀</h3>
+        <label class="setRow" for="showHardBreaks">
+          <input type="checkbox" id="showHardBreaks" checked>
+          <span>原書分行</span>
+          <span class="setHint">保留原書的硬換行；取消＝文字連著排，只有標題與空行換段（作者 2026-10-31）</span>
+        </label>
+        <label class="setRow" for="setPageMarks">
+          <input type="checkbox" id="setPageMarks">
+          <span>顯示原書頁碼</span>
+          <span class="setHint">渲染 <code>&lt;頁&gt;</code>／<code>&lt;_頁&gt;</code>：都是行內的小頁碼；取消＝完全不出現</span>
+        </label>
+        <div class="setRow">
+          <span>術語顯示</span>
+          <select id="setTermMode" title="<术> 的外語要怎麼顯示">
+            <option value="orig">只顯示原書標注（自動加的不顯示）</option>
+            <option value="hover">滑過顯示（hover）</option>
+            <option value="inline">行內顯示（漢詞（外語））</option>
+            <option value="off">關閉（只顯示漢詞）</option>
+          </select>
+          <span class="setHint">術語（<code>&lt;术 sk/pi/tb&gt;</code>）的外語：hover 不佔版面、行內像原書；「只顯示原書標注」會隱藏程式自動加上的（<code>a="1"</code>）</span>
+        </div>
+        <label class="setRow" for="setLineTip">
+          <input type="checkbox" id="setLineTip">
+          <span>滑過本文顯示頁位置（debug）</span>
+          <span class="setHint">原書分行關閉時，滑過任一行就浮出「頁 8p0052a ・ 第 40433 行」；預設關閉，只給校對用</span>
+        </label>
+        <div class="setRow">
+          <span>路徑字數</span>
+          <select id="setTrailMax" title="breadcrumb 每層最多顯示幾個字（下拉不受限）">
+            <option value="4">4 字</option>
+            <option value="5">5 字</option>
+            <option value="6">6 字</option>
+            <option value="8">8 字</option>
+            <option value="0">不限</option>
+          </select>
+          <span class="setHint">breadcrumb 每層最多幾個字（fuyan 的節點名很長）；完整名稱仍在下拉選單與 hover 提示（作者 2026-10-31）</span>
+        </div>
+        <label class="setRow" for="setJumpCheat">
+          <input type="checkbox" id="setJumpCheat" checked>
+          <span>輸入跳至提示</span>
+          <span class="setHint">搜尋框空白停留 1.5 秒時，在下方提示「跳至」語法；按過提示上的「不再提示」會關閉，可在這裡再開（預設開；作者 2026-11-01）</span>
+        </label>
+        <label class="setRow" for="setSharedDocTabs">
+          <input type="checkbox" id="setSharedDocTabs">
+          <span>共享本文分頁（docTab）</span>
+          <span class="setHint">開啟後所有 adb 共用同一條本文分頁；每個分頁記住自己的庫，點分頁會自動切回那個 adb（預設關，各庫各自一組；作者 2026-11-01）</span>
+        </label>
+      </section>
+    </div>
+    <!-- ---- 進階（作者 2026-11-01：從「介面」獨立成頁） ---- -->
+    <div class="setPane" data-setpane="advanced" hidden>
+      <section class="setSection">
+        <h3>進階</h3>
+        <label class="setRow" for="setAdvanced">
+          <input type="checkbox" id="setAdvanced">
+          <span>進階模式</span>
+          <span class="setHint">顯示 token 瀏覽、META／容量／文件／圖片分頁，以及「顯示原始文件」</span>
+        </label>
+      </section>
+      <!-- 閱讀狀態（作者 2026-11-01）：回報問題用。記住開著的 adb、本文分頁、
+           頁碼與**本文的選取區**，存成 JSON 交給作者重現。 -->
+      <section class="setSection">
+        <h3>閱讀狀態</h3>
+        <div class="setRow">
+          <span>名稱</span>
+          <input type="text" id="readStateName" class="setInput" maxlength="40" autocomplete="off"
+            spellcheck="false" placeholder="例如：編輯前">
+          <span class="setHint">記在 JSON 裡，方便分辨是哪一次</span>
+        </div>
+        <div class="setRow">
+          <button class="setBtn" id="readStateExport" type="button">匯出閱讀狀態</button>
+          <button class="setBtn" id="readStateImport" type="button">載入閱讀狀態…</button>
+          <input type="file" id="readStateFile" accept="application/json,.json" hidden>
+          <span class="setHint" id="readStateStatus"></span>
+        </div>
+        <p class="setHint">
+          匯出目前開著的 adb、本文分頁（頁碼、釘選的命中、捲動位置）與<b>本文的選取區</b>，
+          檔名是「修訂者 ID＋本地時間」，例如 <code>sukhanika20261101150312.json</code>。
+          回報問題時把這個檔一起給作者，他就能重現你看到的畫面。載入時需要同樣的 adb。
+        </p>
+      </section>
+    </div>
+    <!-- ---- 介面（主題＋更新；作者 2026-11-01：「介面」section 取消、SVG 併入主題、進階獨立成頁） ---- -->
+    <div class="setPane" data-setpane="ui">
+      <section class="setSection">
+        <h3>主題</h3>
+        <div class="setRow">
+          <span>配色</span>
+          <span class="seg" id="themeSeg" role="group" aria-label="主題">
+            <button type="button" data-theme="dark">暗色系</button>
+            <button type="button" data-theme="light">亮色系</button>
+            <button type="button" data-theme="eye">春綠</button>
+            <button type="button" data-theme="autumn">秋黃</button>
+          </span>
+        </div>
+        <p class="setHint">預設是暗色系。春綠是偏綠的紙色、秋黃是黃棕紙色，長時間閱讀比較不刺眼；換主題只換顏色，不用重開。</p>
+        <label class="setRow" for="setSvgInvert">
+          <input type="checkbox" id="setSvgInvert" checked>
+          <span>圖表自適應背景色</span>
+          <span class="setHint">暗色模式時把黑線的 SVG／PNG 圖表反轉成亮線（fuyan、ys 等有插圖的庫），不再鋪白底；亮色主題不作用</span>
+        </label>
+        <label class="setRow" for="setGlyphs">
+          <input type="checkbox" id="setGlyphs" checked>
+          <span>罕用字改用字形庫</span>
+          <span class="setHint">Unicode 擴充區（Ext A–I、相容區）的字改用字形庫畫成 SVG，大小與旁邊的字一致；客戶端有沒有那個字型都不影響。桌面版才有字庫（網頁版會自動停用）。</span>
+        </label>
+      </section>
+      <!-- 更新鏡像（作者 2026-10-29）：程式更新與資料庫更新共用這一個選擇 -->
+      <section class="setSection">
+        <h3>更新</h3>
+        <div class="setRow">
+          <span>鏡像站</span>
+          <select id="setMirror" class="modeSel" title="程式更新與資料庫更新都從這裡選的站下載">
+            <option value="auto">自動（依連線速度）</option>
+            <option value="primary">大陸主站 shutonggui.cn</option>
+            <option value="overseas">境外鏡像 nissaya.cn</option>
+          </select>
+        </div>
+        <div class="setRow">
+          <span class="setHint" id="setMirrorStatus">自動：偵測中…</span>
+          <span style="flex:1"></span>
+          <button type="button" class="setBtn" id="setMirrorProbe">重新探測</button>
+        </div>
+        <p class="setHint">程式更新與資料庫更新都從選定的站下載。大陸一般連不到 nissaya.cn；「自動」只在鏡像明顯較快（或主站連不上）時切換。</p>
+      </section>
+    </div>
+    <!-- ---- 辭典順序（作者 2026-10-26：從「介面」獨立成頁；可只列 c="isdict"） ---- -->
+    <div class="setPane" data-setpane="dict" hidden>
+      <section class="setSection">
+        <h3>辭典順序</h3>
+        <div class="setRow">
+          <span class="setHint">依序查；找不到的辭典會自動略過，不警告；新加入的辭典排在最後。</span>
+          <span style="flex:1"></span>
+          <button type="button" class="setBtn" id="dictRefresh">重新整理</button>
+        </div>
+        <label class="setRow" for="dictOnlyIsdict">
+          <input type="checkbox" id="dictOnlyIsdict">
+          <span>只列出 <code>c="isdict"</code></span>
+          <span class="setHint">只留 <code>&lt;集 c="… isdict …"&gt;</code> 的庫；佛光大辭典這類沒標記的不列出，選單「查字典」也不會查它們。</span>
+        </label>
+        <div class="dictOrder" id="dictOrderList"><div class="note">讀取辭典中…</div></div>
+        <p class="setHint">只列出目前可用的詞典型 adb（有 <code>&lt;樹 s="$詞"&gt;</code> 的庫）；順序存在這台電腦。</p>
+      </section>
+    </div>
+    <!-- ---- 繁簡 ---- -->
+    <div class="setPane" data-setpane="sim" hidden>
+      <section class="setSection">
+        <h3>繁簡</h3>
+        <label class="setRow" for="setVariants">
+          <input type="checkbox" id="setVariants">
+          <span>輸入通檢</span>
+          <span class="setHint">打「菩萨」也找得到「菩薩」、打「台」也找得到「臺」「檯」——同一個字的不同寫法都當成同一個字來找。</span>
+        </label>
+        <div class="setRow">
+          <span>文字顯示</span>
+          <span class="seg" id="simSeg" role="group" aria-label="文字顯示">
+            <button type="button" data-mode="0">保持原樣</button>
+            <button type="button" data-mode="1">無損簡體</button>
+            <button type="button" data-mode="2">強制簡體</button>
+          </span>
+        </div>
+        <div class="simDemo" id="simDemo" aria-label="文字顯示範例"></div>
+        <p class="setHint">無損簡體只轉「一對一」的字；發／髮、乾／幹、裡／裏這種合併字保留原樣，避免簡化造成誤解（例如中醫）。</p>
+      </section>
+    </div>
+    <!-- ---- 悉曇（作者 2026-10-31）：字型測試頁 ---- -->
+    <div class="setPane" data-setpane="sanskrit" hidden>
+      <section class="setSection">
+        <h3>悉曇字</h3>
+        <p class="setHint">字型隨程式內嵌：悉曇字用 <b>Noto Sans Siddham</b>（OFL）排 Unicode，Noto 排不出來的 81 個字用從 CBETA 抽出的在小字型；蘭札字仍用 CBETA 的 Ranjana。不必安裝字型；沒有 <code>taisho.adb</code> 也看得到。</p>
+        <p class="setHint">碼位：<code>SD-XXXX</code> → <code>U+FA000+XXXX</code>；<code>RJ-XXXX</code> → <code>U+100000+XXXX</code>（Unicode 第 16 平面私用區）。兩段經文取自 CBETA 電子佛典，出處與字碼對映見下方。</p>
+        <label class="setRow" for="setSanskritIast">
+          <input type="checkbox" id="setSanskritIast">
+          <span>字形右邊顯示 IAST 轉寫</span>
+          <span class="setHint">例：字形 na；關閉時只顯示字形，滑過仍有提示。只影響這一頁的經文。</span>
+        </label>
+        <div id="sanskritSamples"><div class="note">讀取中…</div></div>
+        <p class="setHint">字型來源：悉曇 Noto Sans Siddham（SIL OFL 1.1）；蘭札 cbeta.org（Ranjana 2.000，免費提供非營利及個人研究使用）。都已子集化。</p>
+      </section>
+    </div>
+  </div>
+  <div class="setFoot">
+    <span class="setHint" id="setStats"></span>
+    <button id="settingsDone">關閉</button>
+  </div>
+</div>
+
+<!-- About（點左上角 accelon26 開啟；作者 2026-10） -->
+<!-- 「加入 Obsidian」的檔名輸入（作者 2026-10-25）：讀完 vault 才問名字，.adb 可省略 -->
+<div id="vaultNameBackdrop" hidden></div>
+<div id="vaultNameBox" role="dialog" aria-modal="true" aria-labelledby="vaultNameTitle" hidden>
+  <h2 id="vaultNameTitle">加入 Obsidian</h2>
+  <p id="vaultNameIntro">請輸入檔名（<code>.adb</code> 可省略）。</p>
+  <div id="vaultNameRow">
+    <input id="vaultNameInput" type="text" autocomplete="off" spellcheck="false" placeholder="例如 lunyu">
+    <span id="vaultNameSuffix">.adb</span>
+  </div>
+  <p id="vaultNameHint"></p>
+  <div id="vaultNameActions">
+    <button type="button" class="vnBtn" id="vaultNameCancel">取消</button>
+    <button type="button" class="vnBtn primary" id="vaultNameOk">建立</button>
+  </div>
+</div>
+<!-- 圖片放大（作者 2026-10-26）：右欄「圖片」點縮圖 → 大圖、縮放、存檔（檔名同 adb 資源名） -->
+<div id="imgViewBackdrop" hidden></div>
+<div id="imgView" role="dialog" aria-modal="true" aria-labelledby="imgViewName" hidden>
+  <div class="ivHead">
+    <span id="imgViewName" class="ivName">—</span>
+    <span class="ivTools">
+      <button type="button" class="ivBtn" id="imgZoomOut" title="縮小（-）">−</button>
+      <span class="ivPct" id="imgZoomPct">100%</span>
+      <button type="button" class="ivBtn" id="imgZoomIn" title="放大（+）">＋</button>
+      <button type="button" class="ivBtn" id="imgZoomFit" title="適合視窗（0）">適合</button>
+      <button type="button" class="ivBtn" id="imgZoomOne" title="原始大小（1）">1:1</button>
+      <button type="button" class="ivSave" id="imgSave" title="存檔">存檔</button>
+      <button type="button" class="aboutClose" id="imgViewClose" title="關閉（Esc）">✕</button>
+    </span>
+  </div>
+  <div class="ivStage" id="imgStage"><div class="ivCanvas"><img id="imgViewImg" alt=""></div></div>
+</div>
+<!-- 腳注提示（作者 2026-10-26）：hover <註> 時顯示對應 <釋> 的文字 -->
+<div id="noteTip" hidden></div>
+<!-- 選取文字選單（2026-10-30 改兩層）：第一層 複製／搜尋／查看，
+     第二層在右邊展開；滑過或點一下就開。 -->
+<div id="selMenu" class="selMenu" role="menu" hidden>
+  <button type="button" data-sel="rawmark" title="複製選取處對應的原文標記（含 <粗>、<經> 等，並帶庫名與行數），貼到信裡即可定位問題">顯示原文標記</button>
+  <div class="selDivider"></div>
+  <div class="selGroup" data-grp="copy">
+    <button type="button" class="selGroupBtn">複製<span class="selCaret">▸</span></button>
+    <div class="selSub" data-sub="copy">
+      <button type="button" data-sel="cite">引用複製</button>
+      <button type="button" data-sel="copy">複製文字</button>
+      <button type="button" data-sel="rong">融入引用</button>
+      <button type="button" data-sel="qian">嵌入引用</button>
+      <button type="button" data-sel="pos" title="頁 id ＋ 字元範圍，例：yl38p4#12-34">複製字元級位置</button>
+      <button type="button" data-sel="savepos" title="把這個位置存到「已存輸入 → 位置」，下次點一下即跳">☆ 存為位置</button>
+      <button type="button" data-sel="addr" hidden title="高麗藏／大正藏位址範圍（需要對照表）">複製高麗⇄大正位址</button>
+    </div>
+  </div>
+  <div class="selGroup" data-grp="search">
+    <button type="button" class="selGroupBtn">搜尋<span class="selCaret">▸</span></button>
+    <div class="selSub" data-sub="search"></div>
+  </div>
+  <div class="selGroup" data-grp="view">
+    <button type="button" class="selGroupBtn">查看<span class="selCaret">▸</span></button>
+    <div class="selSub" data-sub="view">
+      <button type="button" data-sel="dict">查字典</button>
+      <button type="button" data-sel="lexHan" hidden title="用 lex.adb 反向查選取漢詞對應的巴利詞">查詞</button>
+      <button type="button" data-sel="gloss" hidden></button>
+      <button type="button" data-sel="sutra" hidden></button>
+      <button type="button" data-sel="plateT" hidden>看大正藏圖版</button>
+      <button type="button" data-sel="plateK" hidden>看高麗藏圖版</button>
+    </div>
+  </div>
+  <div class="selDivider"></div>
+  <button type="button" class="selMinor" data-sel="bookmark" title="加入後，下次重開這個 adb 會自動跳到這裡（最後加入的書籤）">☆ 加入書籤</button>
+</div>
+<!-- 引用分布熱圖（作者 2026-10-28）：反鏈的「分布」按鈕打開 -->
+<div id="revHeat" role="dialog" aria-modal="true" aria-labelledby="revHeatTitle" hidden>
+  <div class="revHeatTop">
+    <b id="revHeatTitle">引用分布</b>
+    <span id="revHeatSub" class="dim"></span>
+    <select id="revHeatSrc" title="選擇來源庫" hidden></select>
+    <button type="button" class="aboutClose" id="revHeatClose" title="關閉（Esc）">✕</button>
+  </div>
+  <div id="revHeatBody" class="revHeatBody"><p class="dim">從反鏈那一排按「分布」。</p></div>
+</div>
+<!-- 反鏈清單抽屜（2026-10-28）：100+ 條時的完整清單 -->
+<div id="revList" role="dialog" aria-modal="true" aria-labelledby="revListTitle" hidden>
+  <div class="revListTop">
+    <b id="revListTitle">反鏈清單</b>
+    <span id="revListSub" class="dim"></span>
+    <input id="revListFilter" type="search" placeholder="搜尋書名、頁碼、引文…" autocomplete="off">
+    <button type="button" class="aboutClose" id="revListClose" title="關閉（Esc）">✕</button>
+  </div>
+  <div class="revListSort">
+    <span class="heatSeg" role="group" aria-label="反鏈排序">
+      <button type="button" data-revsort="freq" class="active">頻次</button>
+      <button type="button" data-revsort="src">來源序</button>
+      <button type="button" data-revsort="host">目標序</button>
+    </span>
+  </div>
+  <div id="revListBody" class="revListBody"><p class="dim">載入中…</p></div>
+</div>
+<!-- 研究用資料庫更新（作者 2026-10-29）：#dbTabs 的「New」按鈕打開這一盒 -->
+<div id="adbUpdateBackdrop" hidden></div>
+<div id="adbUpdateBox" role="dialog" aria-modal="true" aria-labelledby="adbUpdateTitle" hidden>
+  <div class="adbUpTop">
+    <b id="adbUpdateTitle">資料庫版本</b>
+    <span id="adbUpdateSub" class="dim"></span>
+    <span class="adbUpTabs" id="adbUpTabs" role="tablist" aria-label="資料庫版本頁籤">
+      <button type="button" data-adbtab="updates" id="adbUpTabUpdates" class="active" role="tab">可更新 <b id="adbUpTabCount">0</b></button>
+      <button type="button" data-adbtab="history" id="adbUpTabHistory" role="tab">版本記錄</button>
+    </span>
+    <button type="button" class="mini" id="adbUpdateCheck" title="重新讀一次官網的版本清單">重新檢查</button>
+    <button type="button" class="aboutClose" id="adbUpdateClose" title="關閉（Esc）">✕</button>
+  </div>
+  <div id="adbUpdateDir" class="adbUpDir" hidden></div>
+  <div id="adbUpdateList"><p class="dim">正在讀更新清單…</p></div>
+  <div class="adbUpFoot">
+    <span id="adbUpdateStatus" class="dim"></span>
+    <button type="button" class="mini primary" id="adbUpdateAll">全部更新</button>
+    <button type="button" class="mini" id="adbUpdateLater">稍後</button>
+  </div>
+</div>
+<div id="adbStoreBackdrop" hidden></div>
+<div id="adbStoreBox" role="dialog" aria-modal="true" aria-labelledby="adbStoreTitle" hidden>
+  <div class="adbUpTop">
+    <b id="adbStoreTitle">取得更多 ADB</b>
+    <span id="adbStoreSub" class="dim">正在探測鏡像…</span>
+    <button type="button" class="mini" id="adbStoreRefresh" title="重新探測鏡像並讀取清單">重新整理</button>
+    <button type="button" class="aboutClose" id="adbStoreClose" title="關閉（Esc）">✕</button>
+  </div>
+  <div id="adbStoreList"><p class="dim">正在讀取清單…</p></div>
+  <div class="adbUpFoot">
+    <span id="adbStoreStatus" class="dim"></span>
+  </div>
+</div>
+<div id="studyIndexBackdrop" hidden></div>
+<div id="studyIndexBox" role="dialog" aria-modal="true" aria-labelledby="studyIndexTitle" hidden>
+  <div class="adbUpTop">
+    <b id="studyIndexTitle">注疏索引</b>
+    <span id="studyIndexSub" class="dim"></span>
+    <input type="search" id="studyIndexFilter" placeholder="篩選經文、品名、注疏名…" autocomplete="off">
+    <button type="button" class="aboutClose" id="studyIndexClose" title="關閉（Esc）">✕</button>
+  </div>
+  <div id="studyIndexList"><p class="dim">正在讀取注疏索引…</p></div>
+  <div class="adbUpFoot"><span id="studyIndexStatus" class="dim"></span></div>
+</div>
+<div id="aboutBackdrop" hidden></div><div id="aboutBox" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" hidden>
+  <div class="aboutTop">
+    <img id="aboutLogo" alt="accelon26" hidden>
+    <div class="aboutTitles">
+      <h2 id="aboutTitle">開放古籍平台</h2>
+      <p class="aboutSub">Accelon3 跨平台平替</p>
+      <p class="aboutSite">官網
+        <a id="aboutSite" href="https://shutonggui.cn/accelon26/" target="_blank" rel="noopener noreferrer">https://shutonggui.cn/accelon26/</a>
+      </p>
+    </div>
+    <button id="aboutClose" class="aboutClose" title="關閉（Esc）">✕</button>
+  </div>
+  <!-- 操作導覽的入口（作者 2026-10-18：從頂欄的 🎬 搬進來；2026-10-28 移到官網下面、
+       版本上面——這兩個入口比版本資訊更常按）。這頁預設「啟動時顯示」。 -->
+  <div class="aboutActions">
+    <button id="aboutTour" class="primary" title="一步一步教你用：開庫、查詞、看本文、目錄、設置、詞典">▶ 操作導覽</button>
+    <button id="aboutKeys" type="button" title="所有快速鍵一覽（一張卡片，Esc 關閉）">快速鍵</button>
+    <label class="aboutToggle" for="aboutStartup">
+      <input type="checkbox" id="aboutStartup"> <span>啟動時顯示本頁面</span>
+    </label>
+  </div>
+  <p class="aboutKeys" id="aboutKeysLine">快速鍵：<b>Ctrl+B</b> 開關左欄；<b>Ctrl+Alt+B</b> 開關右欄（Mac：⌘B／⌘⌥B）。</p>
+  <div class="aboutMeta">
+    <div><span>版本</span><b id="aboutBuild">—</b></div>
+    <div><span>執行環境</span><b id="aboutMode">—</b></div>
+    <div><span>程式檔</span><b id="aboutExe">—</b></div>
+    <!-- .adb 檔案關聯（作者 2026-11-08）：只有一顆按鈕——把 .adb 改指到現在這支 exe；
+         已經正確就只顯示路徑（按鈕隱藏）。 -->
+    <div class="aboutSettingRow" id="aboutAssocRow" hidden>
+      <span>.adb 檔案</span>
+      <b><code id="aboutAssoc">—</code></b>
+      <button class="setBtn" id="aboutAssocSet" type="button">改用這個 exe 開啟</button>
+    </div>
+    <p class="setHint" id="aboutAssocNote" style="margin:0 0 6px 5.6em" hidden></p>
+    <!-- 設定檔（作者 2026-10-22）：顯示 settings.json 的實際位置 -->
+    <div class="aboutSettingRow">
+      <span>設定檔</span>
+      <b><code id="aboutSettings">—</code> <span class="vchip" id="aboutSettingsVersion">v1</span></b>
+      <button class="setBtn" id="aboutSettingsReveal" type="button" hidden>開啟資料夾</button>
+      <button class="setBtn" id="aboutSettingsExport" type="button">匯出</button>
+    </div>
+    <p class="setHint" id="aboutSettingsNote" style="margin:0 0 6px 5.6em"></p>
+    <!-- 修訂者 ID（作者 2026-10-25）：編輯／產生 ADB 時寫進 revisions；沒有 ID 不讓編輯 -->
+    <div class="aboutSettingRow">
+      <span>修訂者 ID</span>
+      <b><input id="aboutUserId" class="aboutUserId" type="text" maxlength="64" autocomplete="username" placeholder="例如 yinshun-editor"></b>
+      <button class="setBtn aboutUserSave" id="aboutUserIdSave" type="button">儲存</button>
+    </div>
+    <p class="setHint" id="aboutUserIdNote" style="margin:0 0 6px 5.6em">沒有 ID 不能進入編輯模式。</p>
+    <!-- 開發者聯絡（作者 2026-10-18）：官網與這一頁都放；「留言給作者」開系統瀏覽器
+         到官網的留言頁（about.ts 攔下來走宿主，WebView2 的 target=_blank 不行）。 -->
+    <div><span>開發者</span><b id="aboutWechat">微信 Sukhanika</b><a id="aboutMessage" class="aboutMsg" href="https://shutonggui.cn/accelon26/message.html" target="_blank" rel="noopener noreferrer">留言給作者</a></div>
+  </div>
+  <div class="aboutUpdate">
+    <span id="aboutUpdateMsg">檢查更新中…</span>
+    <button id="aboutInstall" hidden>下載更新</button>
+  </div>
+  <!-- 操作導覽的入口已移到官網下面（見上方 .aboutActions） -->
+  <p class="aboutFoot">原始碼與操作說明見官網；有問題請在官網回報。</p>
+</div>
+
+<!-- 關連成功的小視窗（作者 2026-11-08）：告訴使用者以後雙擊 .adb 即可 -->
+<div id="assocDoneBackdrop" hidden></div>
+<div id="assocDoneBox" role="dialog" aria-modal="true" aria-labelledby="assocDoneTitle" hidden>
+  <h2 id="assocDoneTitle">已關連 .adb</h2>
+  <p>以後在檔案總管雙擊 .adb，就會用這個 accelon26 開啟。</p>
+  <code id="assocDonePath">—</code>
+  <button id="assocDoneClose" type="button">知道了</button>
+</div>
+
+<!-- 快速鍵卡片（作者 2026-10-29）：About →「⌨ 快速鍵」開啟；內容由 shortcuts.ts 的
+     SHORTCUT_GROUPS 產生（單一真相，About 那一行摘要也從它來）。 -->
+<div id="shortcutBackdrop" hidden></div>
+<div id="shortcutBox" role="dialog" aria-modal="true" aria-labelledby="shortcutTitle" hidden>
+  <div class="skTop">
+    <h2 id="shortcutTitle">快速鍵</h2>
+    <span class="skCount" id="shortcutCount"></span>
+    <button id="shortcutClose" class="aboutClose" title="關閉（Esc）">✕</button>
+  </div>
+  <div id="shortcutBody"></div>
+</div>
+
+<!-- 操作導覽（作者 2026-10）：從「關於」的「▶ 操作導覽」開始，播放器一步一步做給你看。
+     聚光燈與氣泡的內容全部由 tour.ts 產生；這裡只放殼。 -->
+<div id="tourSpot" hidden></div>
+<div id="tourBubble" role="dialog" aria-live="polite" hidden>
+  <div class="tourHead">
+    <span class="tourWhere" id="tourWhere"></span>
+    <button type="button" class="aboutClose" id="tourX" title="結束導覽（Esc）">✕</button>
+  </div>
+  <div id="tourTitle"></div>
+  <div id="tourText"></div>
+  <div id="tourNote" hidden></div>
+  <div class="tourBtns">
+    <button type="button" id="tourPrev" title="上一個場景（←）" hidden>← 上一場景</button>
+    <button type="button" id="tourReplay" title="重播本場景" hidden>重播</button>
+    <button type="button" id="tourAll" title="其他導覽（第一次使用／進階功能）">其他導覽</button>
+    <button type="button" id="tourAuto" title="自動播放：停的步驟會自己往下（示範用）">自動播放：關</button>
+    <span class="tourProg" id="tourProg"></span>
+    <button type="button" id="tourDone" hidden>我做好了</button>
+    <button type="button" id="tourSkip" hidden>略過這步</button>
+    <button type="button" id="tourNext" class="primary" hidden>下一個場景 →</button>
+  </div>
+</div>
+
+<!-- 導覽選單：🎬 -->
+<div id="tourBackdrop" hidden></div>
+<div id="tourBox" role="dialog" aria-modal="true" aria-labelledby="tourMenuTitle" hidden>
+  <div class="setHead">
+    <h2 id="tourMenuTitle">操作導覽</h2>
+    <button id="tourClose" class="aboutClose" title="關閉（Esc）">✕</button>
+  </div>
+  <p class="setHint">跟著做一次就會用。每個場景做完會停住，由你決定要不要往下。</p>
+  <div id="tourList" class="tourList"></div>
+</div>
+
+<!-- 編輯確認／進度（作者 2026-10-24） -->
+<div id="editModalBackdrop" hidden></div>
+<div id="editModal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle" hidden>
+  <div class="setHead">
+    <h2 id="editModalTitle">產生新 ADB</h2>
+    <button id="editModalClose" class="aboutClose" title="取消">✕</button>
+  </div>
+  <div id="editModalBody" class="editModalBody"></div>
+  <div class="editModalBtns">
+    <button type="button" id="editModalCancel">取消</button>
+    <button type="button" id="editModalGo" class="primary">產生並下載</button>
+  </div>
+</div>
+<div id="editProgress" hidden>
+  <div class="editProgressBox">
+    <div id="editProgressText">準備中…</div>
+    <div class="editProgressTrack"><div id="editProgressBar"></div></div>
+  </div>
+</div>
+
+<!-- 輸入框提示卡（作者 2026-11-01 語法提示；2026-11-12 加「已存輸入」四頁）。
+     分頁：提示／位置／此庫／全域。focus 且空白時：有存項立即顯示，否則 1.5 秒後顯示提示。
+     ☆（#savedOpen）可隨時開卡；「＋存目前輸入」把輸入框內容存進當前分頁。 -->
+<div id="jumpCheatCard" class="cheatCard" hidden>
+  <div class="ccTabs" role="tablist">
+    <button type="button" class="ccTab active" data-cc="hint" role="tab">提示</button>
+    <button type="button" class="ccTab" data-cc="pos" role="tab">位置</button>
+    <button type="button" class="ccTab" data-cc="db" role="tab">此庫</button>
+    <button type="button" class="ccTab" data-cc="global" role="tab">全域</button>
+  </div>
+  <div class="ccPane" data-cc="hint">
+    <div class="ccHead">「跳至」可接受的寫法（搜尋不到時自動試）</div>
+    <div id="ccPageRow"><b>頁 id</b>　<code id="ccPage">8p848c</code><span id="ccPageHint">、<code>49p15</code>（英文字母後的 0 可以省略）</span></div>
+    <div id="ccCiteRow"><b>大正引用</b>　<code>大正2，206a15-b13</code>、<code>T02, no. 99, p. 1a7-9</code></div>
+    <div id="ccPageLineRow"><b>頁行</b>　<code id="ccPageLine">y38p7a8</code><span id="ccPageLineHint">（書號＋<code>p</code>頁＋欄行；少了 <code>a8</code> 是頁首、少了 <code>p7</code> 是書首；沒有分欄一律 a 欄；庫名帶數字就寫全名，如 <code>yl38p24</code>）</span></div>
+    <div><b>字元級位置</b>　<code id="ccPos">taisho?5p2c#12-34</code></div>
+    <div><b>目錄路徑</b>　<code>1.2.3</code>　第一書第二章第三節（序＝0）</div>
+    <div><b>節點序號</b>　<code>1-3-4</code>　0 起算（<code>.</code> 與 <code>-</code> 可混用）</div>
+    <div><b>行號</b>　<code id="ccLine">#L123@taisho</code></div>
+    <div><b>註／釋</b>　<code>[11.001</code> 跳到註、<code>]11.001</code> 跳到釋文（舊 adb 寫 <code>[38.160</code>；一定要有前綴，否則 <code>11.001</code> 會被當成目錄路徑）</div>
+  </div>
+  <div class="ccPane" data-cc="pos" hidden><div class="ccList" data-cc-list="pos"></div></div>
+  <div class="ccPane" data-cc="db" hidden><div class="ccList" data-cc-list="db"></div></div>
+  <div class="ccPane" data-cc="global" hidden><div class="ccList" data-cc-list="global"></div></div>
+  <div class="ccFoot">
+    <button type="button" id="ccSave" title="把目前輸入存到這個分頁" hidden>＋ 存目前輸入</button>
+    <button type="button" id="ccClear" title="清空這個分頁" hidden>清空</button>
+    <span class="ccNote" id="ccNote">不想再看到提示請按「不再提示」，想再看到：設置 → 閱讀 → 輸入跳至提示。</span>
+    <button type="button" id="ccGotIt">不再提示</button>
+  </div>
+</div>
+
+<!-- CodeMirror 6（vendored；必須在 viewer bundle 之前載入） -->
+<script>/*__CM_BUNDLE__*/</script>
+<!--__BUILD_TIME__-->
+<script>/*__VIEWER_BUNDLE__*/</script>
+</body>
+</html>
+
+
+
+
+
+
+
+

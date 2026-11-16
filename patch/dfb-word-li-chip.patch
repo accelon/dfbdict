@@ -1,0 +1,91 @@
+--- a/ts/src/accelon26/word-spec.ts
++++ b/ts/src/accelon26/word-spec.ts
+@@ -36,6 +36,12 @@
+   homograph: string;
+   /** 注音／拼音（可選） */
+   pron: WordPron | null;
++  /**
++   * 體例類別（`<詞 t="術語">`）。給詞頭前的小色塊用。
++   * hue 依 `<集 scheme="…">` 的順序表算，與 `<例 t="…"/>` 共用同一來源，
++   * 所以同一類別在「詞頭色塊」與「分區標題」兩處顏色一致。
++   */
++  liLabel: string;
+ }
+ 
+ /**
+@@ -66,5 +72,8 @@
+   const pyText = py || (zy ? bpmf2pinyin(zy) : zyRaw);
+   const pron = zy || pyText ? { zy, py: pyText } : null;
+ 
+-  return { tag, zeroVa, dictHead, wordSpan, b, j, w, homograph, pron };
++  // t 是體例类别（新）。旧库的 `<詞>` 不带 t，取到空串即不渲染色块，行为不变。
++  const liLabel = get('t').trim();
++
++  return { tag, zeroVa, dictHead, wordSpan, b, j, w, homograph, pron, liLabel };
+ }
+--- a/ts/src/accelon26/render_accelon3.ts
++++ b/ts/src/accelon26/render_accelon3.ts
+@@ -146,6 +146,22 @@
+   };
+ }
+ 
++/**
++ * 依 `<集 scheme="…">` 順序表算某個體例標籤的色相。
++ * 抽成函式是因為現在有兩個消費端：`<例 t="…"/>`（分區標題）與 `<詞 t="…">`（詞頭小色塊）。
++ * 兩邊共用同一個 hue 與同一份 liHueByLabel 動態補色，類別顏色才會一致、且順序穩定。
++ */
++function liHueFor(label: string, pal: LiScheme): number {
++  const at = pal.labels.indexOf(label);
++  let hue = at >= 0 ? pal.h + at * pal.step : liHueByLabel.get(label);
++  if (hue == null) {
++    hue = pal.h + (pal.labels.length + liHueNext) * pal.step;
++    liHueByLabel.set(label, hue);
++    liHueNext++;
++  }
++  return hue;
++}
++
+ /** 正文插圖（Accelon3：`圖` 是單張圖，`嵌圖`／`圖片` 是其他寫法的別名） */
+ export const IMAGE_TAGS = new Set(['圖', '嵌圖', '圖片']);
+ 
+@@ -865,14 +881,7 @@
+         if (closing) continue;
+         const label = attrValue(attrs, 't') || '體例';
+         const pal = this.liPalette;
+-        const at = pal.labels.indexOf(label);
+-        let hue = at >= 0 ? pal.h + at * pal.step : liHueByLabel.get(label);
+-        if (hue == null) {
+-          hue = pal.h + (pal.labels.length + liHueNext) * pal.step;
+-          liHueByLabel.set(label, hue);
+-          liHueNext++;
+-        }
+-        const v = liVars(hue, pal);
++        const v = liVars(liHueFor(label, pal), pal);
+         this.lineCls = 'liHeadLine';
+         this.lineStyle = v.vars;
+         html += `<span class="liHead">${esc(label)}</span>`;
+@@ -1170,6 +1179,12 @@
+         }
+         if (word.dictHead) {
+           html += '<span class="dictHead">';
++          // 詞頭前的小色塊（`<詞 t="術語">`）。色相與 `<例 t>` 走同一張 scheme 順序表，
++          // 所以同一類別在分區標題與詞頭色塊上顏色一致。旧库无 t → 空串 → 不渲染，行为不变。
++          if (word.liLabel) {
++            const v = liVars(liHueFor(word.liLabel, this.liPalette));
++            html += `<span class="dictLi" style="${v.vars}">${esc(word.liLabel)}</span>`;
++          }
+           if (word.homograph) this.homographPending = word.homograph;
+         } else if (word.wordSpan) {
+           // 詞譜 `b` 只有在「看起來是 IAST 詞件」時才放進 title。
+--- a/ts/src/accelon26/accelon26.template.html
++++ b/ts/src/accelon26/accelon26.template.html
+@@ -1551,6 +1551,9 @@
+   .liHead { display: inline-block; color: var(--li-color); border: 1px solid var(--li-color); border-radius: 6px; background: var(--li-bg); padding: 1px 8px; font-size: 12.5px; font-weight: 600; letter-spacing: .02em; }
+   /* <詞 py="…" zy="…">：詞頭旁的注音／拼音；不參與選取，避免引用帶到注釋 */
+   .dictHead { font-size: 1.3em; font-weight: 600; }
++  /* <詞 t="術語">：詞頭前的小色塊。色相由 <集 scheme="…"> 順序表算，與 .liHead 同源，
++     所以同一體例類別在「分區標題」與「詞頭色塊」兩處顏色一致。不參與選取，避免引用帶到類別名。 */
++  .dictLi { display: inline-block; vertical-align: .18em; margin-right: .45em; padding: 0 6px; border-radius: 5px; border: 1px solid var(--li-color); background: var(--li-bg); color: var(--li-color); font-size: .56em; font-weight: 600; line-height: 1.5; letter-spacing: .02em; user-select: none; }
+   .homograph { font-size: .58em; font-weight: 500; color: var(--dim); vertical-align: super; margin-left: 1px; }
+   .dictPron { margin-left: .55em; color: var(--dim); font-size: .78em; white-space: nowrap; user-select: none; }
+   .dictPron .pronZy { margin-right: .45em; }
